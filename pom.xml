@@ -13,6 +13,13 @@
 	<version>1.0</version>
 	<name>template</name>
 	<properties />
+	<plugins>
+		<plugin>
+			<groupId>se.sundsvall.dept44</groupId>
+			<artifactId>dept44-formatting-plugin</artifactId>
+			<version>6.0.6-SNAPSHOT</version>
+		</plugin>
+	</plugins>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
