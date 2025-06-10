@@ -9,7 +9,7 @@
 		<!-- lookup parent from repository -->
 	</parent>
 	<groupId>se.sundsvall</groupId>
-	<artifactId>template-spring-boot</artifactId>
+	<artifactId>api-service-teams-sender</artifactId>
 	<version>1.0</version>
 	<name>template</name>
 	<properties />
