@@ -141,7 +141,7 @@ This project is licensed under the [MIT License](LICENSE).
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Sundsvallskommun_api-service-teams-sender&metric=security_rating)](https://sonarcloud.io/summary/overall?id=Sundsvallskommun_api-service-teams-sender)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Sundsvallskommun_api-service-teams-sender&metric=sqale_rating)](https://sonarcloud.io/summary/overall?id=Sundsvallskommun_api-service-teams-sender)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Sundsvallskommun_api-service-teams-sender&metric=vulnerabilities)](https://sonarcloud.io/summary/overall?id=Sundsvallskommun_api-service-teams-sender)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Sundsvallskommun_api-service-teams-sender&metric=bugs)](https://sonarcloud.io/summary/overall?id=Sundsvallskommun_YOUR-PROJECT-ID)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Sundsvallskommun_api-service-teams-sender&metric=bugs)](https://sonarcloud.io/summary/overall?id=Sundsvallskommun_api-service-teams-sender)
 
 ---
 
