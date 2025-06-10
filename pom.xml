@@ -11,7 +11,7 @@
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-teams-sender</artifactId>
 	<version>1.0</version>
-	<name>template</name>
+	<name>api-service-teams-sender</name>
 	<properties />
 	<dependencies>
 		<dependency>
