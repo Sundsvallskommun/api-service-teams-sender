@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TeamsResource {
 
-    @PostMapping(path="send/teams/message")
-    public ResponseEntity<String> sendTeamsMessage(){
-        return ResponseEntity.ok("Sent Successfully");
-    }
+	@PostMapping(path = "send/teams/message")
+	public ResponseEntity<String> sendTeamsMessage() {
+		return ResponseEntity.ok("Sent Successfully");
+	}
 }
