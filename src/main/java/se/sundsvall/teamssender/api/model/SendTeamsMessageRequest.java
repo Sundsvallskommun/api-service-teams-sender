@@ -1,13 +1,24 @@
 package se.sundsvall.teamssender.api.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
-@Getter
-@Setter
+
+
+@Data
+
+@Schema(description = "Request model for sending a Teams message")
+
 public class SendTeamsMessageRequest {
+
+
+	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
 	private String user;
+
+	@Schema(description = "The title of the message", example = "Weekly Update", required = true)
 	private String title;
+
+	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
 	private String message;
 
 	public SendTeamsMessageRequest() {}
