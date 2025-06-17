@@ -12,6 +12,9 @@ public class SendTeamsMessageRequest {
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
 	private String user;
 
+	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
+	private String sender;
+
 	@Schema(description = "The title of the message", example = "Weekly Update", required = true)
 	private String title;
 
@@ -20,10 +23,11 @@ public class SendTeamsMessageRequest {
 
 	public SendTeamsMessageRequest() {}
 
-	public SendTeamsMessageRequest(String user, String title, String message) {
+	public SendTeamsMessageRequest(String user, String title, String message, String sender) {
 		this.user = user;
 		this.title = title;
 		this.message = message;
+		this.sender = sender;
 	}
 
 }

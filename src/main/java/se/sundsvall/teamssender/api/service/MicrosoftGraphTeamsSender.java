@@ -6,14 +6,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.microsoft.graph.models.Attachment;
-import com.microsoft.graph.models.BodyType;
-import com.microsoft.graph.models.EmailAddress;
-import com.microsoft.graph.models.FileAttachment;
-import com.microsoft.graph.models.InternetMessageHeader;
-import com.microsoft.graph.models.ItemBody;
-import com.microsoft.graph.models.Message;
-import com.microsoft.graph.models.Recipient;
+import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody;
 import java.util.Base64;
@@ -23,6 +16,7 @@ import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
+import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 
 
 public class MicrosoftGraphTeamsSender {
@@ -34,24 +28,42 @@ public class MicrosoftGraphTeamsSender {
     }
 
     @Override
-    public void sendEmail(final SendEmailRequest request) {
+    public void createChat(final SendTeamsMessageRequest request) {
         try {
-            final var sender = request.sender();
 
-            final var message = createMessage();
-            message.setFrom(createRecipient(sender.name(), sender.address()));
-            message.setSender(createRecipient(sender.name(), sender.address()));
-            message.setSubject(request.subject());
-            message.setBody(createItemBody(request));
+            GraphServiceClient graphClient = new GraphServiceClient(requestAdapter);
 
+            Chat chat = new Chat();
+            chat.setChatType(ChatType.OneOnOne);
+            LinkedList<ConversationMember> members = new LinkedList<ConversationMember>();
+            AadUserConversationMember conversationMember = new AadUserConversationMember();
+            conversationMember.setOdataType("#microsoft.graph.aadUserConversationMember");
+            LinkedList<String> roles = new LinkedList<String>();
+            roles.add("owner");
+            conversationMember.setRoles(roles);
+            HashMap<String, Object> additionalData = new HashMap<String, Object>();
+            additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('8b081ef6-4792-4def-b2c9-c363a1bf41d5')");
+            conversationMember.setAdditionalData(additionalData);
+            members.add(conversationMember);
+            AadUserConversationMember conversationMember1 = new AadUserConversationMember();
+            conversationMember1.setOdataType("#microsoft.graph.aadUserConversationMember");
+            LinkedList<String> roles1 = new LinkedList<String>();
+            roles1.add("owner");
+            conversationMember1.setRoles(roles1);
+            HashMap<String, Object> additionalData1 = new HashMap<String, Object>();
+            additionalData1.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('82af01c5-f7cc-4a2e-a728-3a5df21afd9d')");
+            conversationMember1.setAdditionalData(additionalData1);
+            members.add(conversationMember1);
+            chat.setMembers(members);
+            Chat result = graphClient.chats().post(chat);
             // Recipient
-            message.setToRecipients(List.of(createRecipient(request.emailAddress())));
+            chat.setToRecipients(List.of(createRecipient(request.emailAddress())));
 
             // Reply-to
             final var replyTo = ofNullable(sender.replyTo())
                     .filter(StringUtils::isNotBlank)
                     .orElse(sender.address());
-            message.setReplyTo(List.of(createRecipient(replyTo)));
+            chat.setReplyTo(List.of(createRecipient(replyTo)));
 
             // Attachments
             final var attachments = ofNullable(request.attachments()).orElse(emptyList()).stream()
@@ -59,7 +71,7 @@ public class MicrosoftGraphTeamsSender {
                     .filter(Objects::nonNull)
                     .toList();
             if (!attachments.isEmpty()) {
-                message.setAttachments(attachments);
+                chat.setAttachments(attachments);
             }
 
             // Headers
@@ -67,12 +79,12 @@ public class MicrosoftGraphTeamsSender {
                     .map(this::createHeader)
                     .toList();
             if (!headers.isEmpty()) {
-                message.setInternetMessageHeaders(headers);
+                chat.setInternetMessageHeaders(headers);
             }
 
             // Request
             final var requestBody = createSendMailPostRequestBody();
-            requestBody.setMessage(message);
+            requestBody.setMessage(chat);
             requestBody.setSaveToSentItems(false);
 
             // Send the e-mail
