@@ -3,14 +3,11 @@ package se.sundsvall.teamssender.api.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-
-
 @Data
 
 @Schema(description = "Request model for sending a Teams message")
 
 public class SendTeamsMessageRequest {
-
 
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
 	private String user;
