@@ -93,22 +93,22 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 
     static final String MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME = "ms-graph-teams-sender-";
 
-    void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final MailSenderProperties mailSenderProperties) {
+    void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final TeamsSenderProperties teamsSenderProperties) {
         final var beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(MicrosoftGraphTeamsSender.class)
-                .addConstructorArgValue(createGraphServiceClient(mailSenderProperties.azure))
+                .addConstructorArgValue(createGraphServiceClient(teamsSenderProperties.azure))
                 .addPropertyValue("municipalityId", municipalityId)
                 .getBeanDefinition();
 
         registerBeanDefinition(beanDefinitionRegistry, MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME + municipalityId, beanDefinition);
     }
 
-    GraphServiceClient createGraphServiceClient(final MailSenderProperties.Azure azureMailSenderProperties) {
+    GraphServiceClient createGraphServiceClient(final TeamsSenderProperties.Azure azureTeamsSenderProperties) {
         final var clientSecretCredential = new ClientSecretCredentialBuilder()
-                .tenantId(azureMailSenderProperties.tenantId)
-                .clientId(azureMailSenderProperties.clientId)
-                .clientSecret(azureMailSenderProperties.clientSecret)
+                .tenantId(azureTeamsSenderProperties.tenantId)
+                .clientId(azureTeamsSenderProperties.clientId)
+                .clientSecret(azureTeamsSenderProperties.clientSecret)
                 .build();
-        return new GraphServiceClient(clientSecretCredential, azureMailSenderProperties.scope);
+        return new GraphServiceClient(clientSecretCredential, azureTeamsSenderProperties.scope);
     }
 
 
