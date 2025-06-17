@@ -8,7 +8,6 @@ import lombok.Data;
 
 public class SendTeamsMessageResponse {
 
-
 	@Schema(description = "The ID of the Teams chat", example = "19:abc123xyz@thread.tacv2")
 	private String chatId;
 

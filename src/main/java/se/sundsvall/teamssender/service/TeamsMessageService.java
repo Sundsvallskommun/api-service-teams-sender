@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class TeamsMessageService {
 
-    public ResponseEntity<String> sendTeamsMessage() {
-        return ResponseEntity.ok("Sent successfully");
-    }
+	public ResponseEntity<String> sendTeamsMessage() {
+		return ResponseEntity.ok("Sent successfully");
+	}
 }
