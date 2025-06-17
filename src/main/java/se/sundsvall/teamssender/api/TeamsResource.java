@@ -1,14 +1,30 @@
 package se.sundsvall.teamssender.api;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-public class TeamsResource {
 
-	@PostMapping(path = "send/teams/message")
-	public ResponseEntity<String> sendTeamsMessage() {
+
+@RestController
+@Tag(name = "Teams resource", description = "Resource for sending message in Teams")
+@Validated
+class TeamsResource {
+
+	@PostMapping("{municipalityId}/teams/messages")
+
+	@Operation(summary = "Send a message in Teams", responses = {
+			@ApiResponse(
+					responseCode = "200",
+					description = "Successful Operation",
+					useReturnTypeSchema = true),
+	})
+
+	ResponseEntity<String> sendTeamsMessage() {
 		return ResponseEntity.ok("Sent Successfully");
 	}
 }
