@@ -24,7 +24,7 @@ public class TeamsService {
 			.collect(toMap(TeamsSender::getMunicipalityId, Function.identity()));
 	}
 
-	public void sendChat(final String municipalityId, final SendTeamsMessageRequest request) {
+	public void sendTeamsMessage(final String municipalityId, final SendTeamsMessageRequest request) {
 		var chatSender = chatSenders.get(municipalityId);
 		if (isNull(chatSender)) {
 			throw Problem.valueOf(Status.BAD_GATEWAY, "No mail sender exists for municipalityId " + municipalityId);
