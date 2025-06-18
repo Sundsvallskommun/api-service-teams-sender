@@ -57,22 +57,11 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 		final var beanDefinitionRegistry = (BeanDefinitionRegistry) beanFactory;
 
 		teamsSenderPropertiesByMunicipalityId.forEach((municipalityId, teamsSenderProperties) -> {
-			final var basicSet = nonNull(teamsSenderProperties.basic);
 			final var azureSet = nonNull(teamsSenderProperties.azure);
 
-			// Make sure that exactly one of "basic" and "azure" is set, and validate the one that actually is
-			if ((!basicSet && !azureSet) || (basicSet && azureSet)) {
-				throw new BeanCreationException("Exactly one of SMTP 'basic' or 'azure' properties must be set");
-			} else if (basicSet) {
-				validator.validate(teamsSenderProperties.basic);
-
-				// Merge the default properties with the SMTP server properties, with
-				// values from the latter possibly overriding defaults
-				final var mergedProperties = new Properties();
-				mergedProperties.putAll(defaultProperties);
-				if (nonNull(teamsSenderProperties.basic.properties)) {
-					mergedProperties.putAll(teamsSenderProperties.basic.properties);
-				}
+			// Make sure that "azure" is set, and validate it is
+			if ((!azureSet)) {
+				throw new BeanCreationException("Azure must be set");
 
 			} else {
 				validator.validate(teamsSenderProperties.azure);
@@ -113,19 +102,9 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 	@Validated
 	record TeamsSenderProperties(
 
-		Basic basic,
 		Azure azure) {
 
 		private static final String NOT_BLANK_MESSAGE = "must not be blank";
-
-		// Basic not needed, only Azure in Teams.
-		record Basic(
-			@NotBlank(message = NOT_BLANK_MESSAGE) String host,
-			@DefaultValue("25") Integer port,
-			String username,
-			String password,
-			Properties properties) {
-		}
 
 		record Azure(
 			@NotBlank(message = NOT_BLANK_MESSAGE) String tenantId,
