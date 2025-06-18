@@ -7,7 +7,6 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Map;
-import java.util.Properties;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
@@ -32,12 +31,10 @@ import se.sundsvall.teamssender.api.service.MicrosoftGraphTeamsSender;
 class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationContextAware, InitializingBean {
 
 	static final String MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME = "ms-graph-teams-sender-";
-	static final String DEFAULT_PROPERTIES = "integration.teams.default-properties";
 	static final String INSTANCES = "integration.teams.instances";
 
 	private Environment environment;
 	private Validator validator;
-	private Properties defaultProperties;
 	private Map<String, TeamsSenderProperties> teamsSenderPropertiesByMunicipalityId;
 
 	@Override
@@ -45,8 +42,6 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 		final var validationBindHandler = new ValidationBindHandler(new SpringValidatorAdapter(validator));
 		final var binder = Binder.get(environment);
 
-		// Bind/load (or create empty) default properties
-		defaultProperties = binder.bindOrCreate(DEFAULT_PROPERTIES, Bindable.of(Properties.class), validationBindHandler);
 		// Bind/load instance properties
 		teamsSenderPropertiesByMunicipalityId = binder.bind(
 			INSTANCES, Bindable.mapOf(String.class, TeamsSenderProperties.class), validationBindHandler).get();
