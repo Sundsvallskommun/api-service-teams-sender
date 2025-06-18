@@ -1,9 +1,13 @@
 package se.sundsvall.teamssender.api.configuration;
 
+import static java.util.Objects.nonNull;
+
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotBlank;
+import java.util.Map;
+import java.util.Properties;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
@@ -24,121 +28,111 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import se.sundsvall.teamssender.api.service.MicrosoftGraphTeamsSender;
 
-import static java.util.Objects.nonNull;
-
-
-import java.util.Map;
-import java.util.Properties;
-
-
 @Component
 class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationContextAware, InitializingBean {
 
-    static final String MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME = "ms-graph-teams-sender-";
-    static final String DEFAULT_PROPERTIES = "integration.teams.default-properties";
-    static final String INSTANCES = "integration.teams.instances";
+	static final String MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME = "ms-graph-teams-sender-";
+	static final String DEFAULT_PROPERTIES = "integration.teams.default-properties";
+	static final String INSTANCES = "integration.teams.instances";
 
-    private Environment environment;
-    private Validator validator;
-    private Properties defaultProperties;
-    private Map<String, TeamsSenderProperties> teamsSenderPropertiesByMunicipalityId;
+	private Environment environment;
+	private Validator validator;
+	private Properties defaultProperties;
+	private Map<String, TeamsSenderProperties> teamsSenderPropertiesByMunicipalityId;
 
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		final var validationBindHandler = new ValidationBindHandler(new SpringValidatorAdapter(validator));
+		final var binder = Binder.get(environment);
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        final var validationBindHandler = new ValidationBindHandler(new SpringValidatorAdapter(validator));
-        final var binder = Binder.get(environment);
+		// Bind/load (or create empty) default properties
+		defaultProperties = binder.bindOrCreate(DEFAULT_PROPERTIES, Bindable.of(Properties.class), validationBindHandler);
+		// Bind/load instance properties
+		teamsSenderPropertiesByMunicipalityId = binder.bind(
+			INSTANCES, Bindable.mapOf(String.class, TeamsSenderProperties.class), validationBindHandler).get();
+	}
 
-        // Bind/load (or create empty) default properties
-        defaultProperties = binder.bindOrCreate(DEFAULT_PROPERTIES, Bindable.of(Properties.class), validationBindHandler);
-        // Bind/load instance properties
-        teamsSenderPropertiesByMunicipalityId = binder.bind(
-                INSTANCES, Bindable.mapOf(String.class, TeamsSenderProperties.class), validationBindHandler).get();
-    }
+	@Override
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		final var beanDefinitionRegistry = (BeanDefinitionRegistry) beanFactory;
 
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        final var beanDefinitionRegistry = (BeanDefinitionRegistry) beanFactory;
+		teamsSenderPropertiesByMunicipalityId.forEach((municipalityId, teamsSenderProperties) -> {
+			final var basicSet = nonNull(teamsSenderProperties.basic);
+			final var azureSet = nonNull(teamsSenderProperties.azure);
 
-        teamsSenderPropertiesByMunicipalityId.forEach((municipalityId, teamsSenderProperties) -> {
-            final var basicSet = nonNull(teamsSenderProperties.basic);
-            final var azureSet = nonNull(teamsSenderProperties.azure);
+			// Make sure that exactly one of "basic" and "azure" is set, and validate the one that actually is
+			if ((!basicSet && !azureSet) || (basicSet && azureSet)) {
+				throw new BeanCreationException("Exactly one of SMTP 'basic' or 'azure' properties must be set");
+			} else if (basicSet) {
+				validator.validate(teamsSenderProperties.basic);
 
-            // Make sure that exactly one of "basic" and "azure" is set, and validate the one that actually is
-            if ((!basicSet && !azureSet) || (basicSet && azureSet)) {
-                throw new BeanCreationException("Exactly one of SMTP 'basic' or 'azure' properties must be set");
-            } else if (basicSet) {
-                validator.validate(teamsSenderProperties.basic);
+				// Merge the default properties with the SMTP server properties, with
+				// values from the latter possibly overriding defaults
+				final var mergedProperties = new Properties();
+				mergedProperties.putAll(defaultProperties);
+				if (nonNull(teamsSenderProperties.basic.properties)) {
+					mergedProperties.putAll(teamsSenderProperties.basic.properties);
+				}
 
-                // Merge the default properties with the SMTP server properties, with
-                // values from the latter possibly overriding defaults
-                final var mergedProperties = new Properties();
-                mergedProperties.putAll(defaultProperties);
-                if (nonNull(teamsSenderProperties.basic.properties)) {
-                    mergedProperties.putAll(teamsSenderProperties.basic.properties);
-                }
+			} else {
+				validator.validate(teamsSenderProperties.azure);
 
-            } else {
-                validator.validate(teamsSenderProperties.azure);
+				registerMicrosoftGraphTeamsSender(beanDefinitionRegistry, municipalityId, teamsSenderProperties);
+			}
+		});
+	}
 
-                registerMicrosoftGraphTeamsSender(beanDefinitionRegistry, municipalityId, teamsSenderProperties);
-            }
-        });
-    }
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		environment = applicationContext.getEnvironment();
+		validator = applicationContext.getBean(Validator.class);
+	}
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        environment = applicationContext.getEnvironment();
-        validator = applicationContext.getBean(Validator.class);
-    }
+	void registerBeanDefinition(final BeanDefinitionRegistry beanDefinitionRegistry, final String beanName, final BeanDefinition beanDefinition) {
+		beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);
+	}
 
-    void registerBeanDefinition(final BeanDefinitionRegistry beanDefinitionRegistry, final String beanName, final BeanDefinition beanDefinition) {
-        beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);
-    }
-      void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final TeamsSenderProperties teamsSenderProperties) {
-        final var beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(MicrosoftGraphTeamsSender.class)
-                .addConstructorArgValue(createGraphServiceClient(teamsSenderProperties.azure))
-                .addPropertyValue("municipalityId", municipalityId)
-                .getBeanDefinition();
+	void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final TeamsSenderProperties teamsSenderProperties) {
+		final var beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(MicrosoftGraphTeamsSender.class)
+			.addConstructorArgValue(createGraphServiceClient(teamsSenderProperties.azure))
+			.addPropertyValue("municipalityId", municipalityId)
+			.getBeanDefinition();
 
-        registerBeanDefinition(beanDefinitionRegistry, MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME + municipalityId, beanDefinition);
-    }
+		registerBeanDefinition(beanDefinitionRegistry, MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME + municipalityId, beanDefinition);
+	}
 
-    GraphServiceClient createGraphServiceClient(final TeamsSenderProperties.Azure azureTeamsSenderProperties) {
-        final var clientSecretCredential = new ClientSecretCredentialBuilder()
-                .tenantId(azureTeamsSenderProperties.tenantId)
-                .clientId(azureTeamsSenderProperties.clientId)
-                .clientSecret(azureTeamsSenderProperties.clientSecret)
-                .build();
-        return new GraphServiceClient(clientSecretCredential, azureTeamsSenderProperties.scope);
-    }
+	GraphServiceClient createGraphServiceClient(final TeamsSenderProperties.Azure azureTeamsSenderProperties) {
+		final var clientSecretCredential = new ClientSecretCredentialBuilder()
+			.tenantId(azureTeamsSenderProperties.tenantId)
+			.clientId(azureTeamsSenderProperties.clientId)
+			.clientSecret(azureTeamsSenderProperties.clientSecret)
+			.build();
+		return new GraphServiceClient(clientSecretCredential, azureTeamsSenderProperties.scope);
+	}
 
+	@Validated
+	record TeamsSenderProperties(
 
+		Basic basic,
+		Azure azure) {
 
-    @Validated
-        record TeamsSenderProperties(
+		private static final String NOT_BLANK_MESSAGE = "must not be blank";
 
-                Basic basic,
-                Azure azure) {
+		// Basic not needed, only Azure in Teams.
+		record Basic(
+			@NotBlank(message = NOT_BLANK_MESSAGE) String host,
+			@DefaultValue("25") Integer port,
+			String username,
+			String password,
+			Properties properties) {
+		}
 
-            private static final String NOT_BLANK_MESSAGE = "must not be blank";
-
-            //Basic not needed, only Azure in Teams.
-            record Basic(
-                    @NotBlank(message = NOT_BLANK_MESSAGE) String host,
-                    @DefaultValue("25") Integer port,
-                    String username,
-                    String password,
-                    Properties properties) {
-            }
-
-            record Azure(
-                    @NotBlank(message = NOT_BLANK_MESSAGE) String tenantId,
-                    @NotBlank(message = NOT_BLANK_MESSAGE) String clientId,
-                    @NotBlank(message = NOT_BLANK_MESSAGE) String clientSecret,
-                    @DefaultValue("https://graph.microsoft.com/.default") String scope) {
-            }
-        }
-
+		record Azure(
+			@NotBlank(message = NOT_BLANK_MESSAGE) String tenantId,
+			@NotBlank(message = NOT_BLANK_MESSAGE) String clientId,
+			@NotBlank(message = NOT_BLANK_MESSAGE) String clientSecret,
+			@DefaultValue("https://graph.microsoft.com/.default") String scope) {
+		}
+	}
 
 }
