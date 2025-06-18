@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -24,18 +25,18 @@ import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import se.sundsvall.teamssender.api.service.MicrosoftGraphTeamsSender;
 
 import static java.util.Objects.nonNull;
-import static org.springframework.beans.factory.support.BeanDefinitionReaderUtils.registerBeanDefinition;
 
+
+import java.util.Map;
 import java.util.Properties;
 
 
 @Component
 class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationContextAware, InitializingBean {
 
-    static final String SMTP_TEAMS_SENDER_BEAN_NAME = "smtp-teams-sender-";
     static final String MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME = "ms-graph-teams-sender-";
-    static final String DEFAULT_PROPERTIES = "integration.email.default-properties";
-    static final String INSTANCES = "integration.email.instances";
+    static final String DEFAULT_PROPERTIES = "integration.teams.default-properties";
+    static final String INSTANCES = "integration.teams.instances";
 
     private Environment environment;
     private Validator validator;
@@ -77,7 +78,6 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
                     mergedProperties.putAll(teamsSenderProperties.basic.properties);
                 }
 
-                registerSmtpTeamsSender(beanDefinitionRegistry, municipalityId, teamsSenderProperties, mergedProperties);
             } else {
                 validator.validate(teamsSenderProperties.azure);
 
@@ -88,12 +88,14 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
+        environment = applicationContext.getEnvironment();
+        validator = applicationContext.getBean(Validator.class);
     }
 
-    static final String MICROSOFT_GRAPH_TEAMS_SENDER_BEAN_NAME = "ms-graph-teams-sender-";
-
-    void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final TeamsSenderProperties teamsSenderProperties) {
+    void registerBeanDefinition(final BeanDefinitionRegistry beanDefinitionRegistry, final String beanName, final BeanDefinition beanDefinition) {
+        beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);
+    }
+      void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final TeamsSenderProperties teamsSenderProperties) {
         final var beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(MicrosoftGraphTeamsSender.class)
                 .addConstructorArgValue(createGraphServiceClient(teamsSenderProperties.azure))
                 .addPropertyValue("municipalityId", municipalityId)
@@ -121,6 +123,7 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 
             private static final String NOT_BLANK_MESSAGE = "must not be blank";
 
+            //Basic not needed, only Azure in Teams.
             record Basic(
                     @NotBlank(message = NOT_BLANK_MESSAGE) String host,
                     @DefaultValue("25") Integer port,
