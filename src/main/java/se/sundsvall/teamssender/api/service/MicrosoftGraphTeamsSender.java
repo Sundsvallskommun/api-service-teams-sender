@@ -5,8 +5,10 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 
-public class MicrosoftGraphTeamsSender {
+public class MicrosoftGraphTeamsSender implements TeamsSender {
 
 	private final GraphServiceClient graphClient;
 	private String municipalityId;
@@ -15,8 +17,17 @@ public class MicrosoftGraphTeamsSender {
 		this.graphClient = graphClient;
 	}
 
-	public void createChat(String user1Id, String user2Id) {
-		// 1. Skapa chat
+	@Override
+	public String getMunicipalityId() {
+		return municipalityId;
+	}
+
+	@Override
+	public void setMunicipalityId(final String municipalityId) {
+		this.municipalityId = municipalityId;
+	}
+
+	public Chat createChat(String user1Id, String user2Id) {
 		Chat chat = new Chat();
 		chat.setChatType(ChatType.OneOnOne);
 
@@ -25,24 +36,27 @@ public class MicrosoftGraphTeamsSender {
 		members.add(createMember(user2Id));
 		chat.setMembers(members);
 
-		Chat createdChat = graphClient.chats().post(chat);
-
+		return graphClient.chats().post(chat);
 	}
 
-	public void sendMessage(Chat createdChat, ChatMessage chatMessage) {
+	public void sendTeamsMessage(SendTeamsMessageRequest request) {
+		var createdChat = createChat(request.getUser(), request.getSender());
+		var chatMessage = createMessage(request.getMessage());
+
 		graphClient.chats()
-			.byChatId(createdChat.getId())
+			.byChatId(Objects.requireNonNull(createdChat.getId()))
 			.messages()
 			.post(chatMessage);
 	}
 
-	public void createMessage(String message) {
+	public ChatMessage createMessage(String message) {
+		ItemBody body = new ItemBody();
+		body.setContent(message);
+
 		ChatMessage chatMessage = new ChatMessage();
-		chatMessage.setBody(new ItemBody() {
-			{
-				setContent(message);
-			}
-		});
+		chatMessage.setBody(body);
+
+		return chatMessage;
 	}
 
 	private AadUserConversationMember createMember(String userId) {
