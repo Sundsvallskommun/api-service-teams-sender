@@ -25,7 +25,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
-import se.sundsvall.teamssender.api.service.MicrosoftGraphTeamsSender;
+import se.sundsvall.teamssender.service.MicrosoftGraphTeamsSender;
 
 @Component
 class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationContextAware, InitializingBean {

@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.api.service;
+package se.sundsvall.teamssender.service;
 
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
