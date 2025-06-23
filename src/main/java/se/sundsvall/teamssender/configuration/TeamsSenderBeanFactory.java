@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.api.configuration;
+package se.sundsvall.teamssender.configuration;
 
 import static java.util.Objects.nonNull;
 
