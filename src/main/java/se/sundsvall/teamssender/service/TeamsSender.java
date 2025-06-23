@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.api.service;
+package se.sundsvall.teamssender.service;
 
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 

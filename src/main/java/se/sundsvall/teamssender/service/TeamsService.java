@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.api.service;
+package se.sundsvall.teamssender.service;
 
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toMap;

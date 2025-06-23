@@ -19,7 +19,7 @@ import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
-import se.sundsvall.teamssender.api.service.TeamsService;
+import se.sundsvall.teamssender.service.TeamsService;
 
 @RestController
 @Tag(name = "Teams resource", description = "Resource for sending message in Teams")
