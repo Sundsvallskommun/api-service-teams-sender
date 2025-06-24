@@ -11,7 +11,7 @@ import org.zalando.problem.spring.web.advice.ProblemHandling;
 @ControllerAdvice
 public class TeamsResource implements ProblemHandling {
 
-	private static final URI BASE_URI = URI.create("https://example.com/problem");
+	private static final URI BASE_URI = URI.create("http://localhost:8080/problem");
 
 	@ExceptionHandler(ChatNotFoundException.class)
 	public ResponseEntity<Problem> handleChatNotFound(ChatNotFoundException ex) {
