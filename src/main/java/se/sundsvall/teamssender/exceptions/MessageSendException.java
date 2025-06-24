@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.api;
+package se.sundsvall.teamssender.exceptions;
 
 public class MessageSendException extends RuntimeException {
 	public MessageSendException(String message) {
