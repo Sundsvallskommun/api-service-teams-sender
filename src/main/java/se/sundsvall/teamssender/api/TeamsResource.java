@@ -1,63 +1,71 @@
 package se.sundsvall.teamssender.api;
 
-import static org.springframework.http.ResponseEntity.ok;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import java.net.URI;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.NativeWebRequest;
 import org.zalando.problem.Problem;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
-import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
-import se.sundsvall.teamssender.service.TeamsService;
+import org.zalando.problem.Status;
+import org.zalando.problem.spring.web.advice.ProblemHandling;
 
-@RestController
-@Tag(name = "Teams resource", description = "Resource for sending message in Teams")
-@Validated
-class TeamsResource {
+@ControllerAdvice
+public class TeamsResource implements ProblemHandling {
 
-	private final TeamsService teamsService;
+	private static final URI BASE_URI = URI.create("https://example.com/problem");
 
-	public TeamsResource(final TeamsService teamsService) {
-		this.teamsService = teamsService;
+	@ExceptionHandler(ChatNotFoundException.class)
+	public ResponseEntity<Problem> handleChatNotFound(ChatNotFoundException ex) {
+		Problem problem = Problem.builder()
+			.withType(BASE_URI.resolve("/chat-not-found"))
+			.withTitle("Chat Not Found")
+			.withStatus(Status.NOT_FOUND)
+			.withDetail(ex.getMessage())
+			.build();
+		return ResponseEntity.status(Status.NOT_FOUND.getStatusCode()).body(problem);
 	}
 
-	@PostMapping("{municipalityId}/teams/messages")
+	@ExceptionHandler(MessageSendException.class)
+	public ResponseEntity<Problem> handleMessageSendFailure(MessageSendException ex) {
+		Problem problem = Problem.builder()
+			.withType(BASE_URI.resolve("/message-failure"))
+			.withTitle("Message Send Failure")
+			.withStatus(Status.UNPROCESSABLE_ENTITY)
+			.withDetail(ex.getMessage())
+			.build();
+		return ResponseEntity.status(Status.UNPROCESSABLE_ENTITY.getStatusCode()).body(problem);
+	}
 
-	@Operation(summary = "Send a message in Teams", responses = {
-		@ApiResponse(
-			responseCode = "200",
-			description = "Successful Operation",
-			useReturnTypeSchema = true),
+	@ExceptionHandler(AuthenticationException.class)
+	public ResponseEntity<Problem> handleAuth(AuthenticationException ex) {
+		Problem problem = Problem.builder()
+			.withType(BASE_URI.resolve("/auth-error"))
+			.withTitle("Authentication or Authorization Error")
+			.withStatus(Status.UNAUTHORIZED)
+			.withDetail(ex.getMessage())
+			.build();
+		return ResponseEntity.status(Status.UNAUTHORIZED.getStatusCode()).body(problem);
+	}
 
-		@ApiResponse(
-			responseCode = "400",
-			description = "Bad Request",
-			content = @Content(schema = @Schema(oneOf = {
-				Problem.class, ConstraintViolationProblem.class
-			}))),
-		@ApiResponse(
-			responseCode = "500",
-			description = "Internal Server Error",
-			content = @Content(schema = @Schema(implementation = Problem.class)))
-	})
+	@ExceptionHandler(GraphConnectionException.class)
+	public ResponseEntity<Problem> handleGraphConnection(GraphConnectionException ex) {
+		Problem problem = Problem.builder()
+			.withType(BASE_URI.resolve("/graph-error"))
+			.withTitle("Graph API Connection Error")
+			.withStatus(Status.SERVICE_UNAVAILABLE)
+			.withDetail(ex.getMessage())
+			.build();
+		return ResponseEntity.status(Status.SERVICE_UNAVAILABLE.getStatusCode()).body(problem);
+	}
 
-	ResponseEntity<String> sendTeamsMessage(
-		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@Valid @RequestBody final SendTeamsMessageRequest request) {
-
-		teamsService.sendTeamsMessage(municipalityId, request);
-
-		return ok().build();
+	@Override
+	public ResponseEntity<Problem> handleThrowable(final Throwable throwable,
+		final NativeWebRequest request) {
+		Problem problem = Problem.builder()
+			.withType(BASE_URI.resolve("/internal-error"))
+			.withTitle("Unexpected Internal Server Error")
+			.withStatus(Status.INTERNAL_SERVER_ERROR)
+			.withDetail(throwable.getMessage())
+			.build();
+		return ResponseEntity.status(Status.INTERNAL_SERVER_ERROR.getStatusCode()).body(problem);
 	}
 }
