@@ -12,7 +12,7 @@ import lombok.Data;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
 import org.zalando.problem.Status;
-import se.sundsvall.teamssender.exceptions.SendTeamsMessageRequest;
+import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 
 @Service
 @Data
