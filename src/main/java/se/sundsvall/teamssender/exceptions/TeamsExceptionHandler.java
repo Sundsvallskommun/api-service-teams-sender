@@ -1,6 +1,7 @@
 package se.sundsvall.teamssender.exceptions;
 
 import java.net.URI;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -59,7 +60,7 @@ public class TeamsExceptionHandler implements ProblemHandling {
 
 	@Override
 	public ResponseEntity<Problem> handleThrowable(final Throwable throwable,
-		final NativeWebRequest request) {
+		@NotNull final NativeWebRequest request) {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/internal-error"))
 			.withTitle("Unexpected Internal Server Error")
@@ -68,14 +69,15 @@ public class TeamsExceptionHandler implements ProblemHandling {
 			.build();
 		return ResponseEntity.status(Status.INTERNAL_SERVER_ERROR.getStatusCode()).body(problem);
 	}
+
 	@ExceptionHandler(RecipientException.class)
 	public ResponseEntity<Problem> handleRecipient(RecipientException ex) {
 		Problem problem = Problem.builder()
-				.withType(BASE_URI.resolve("/recipient-error"))
-				.withTitle("Recipient not found Error")
-				.withStatus(Status.NOT_FOUND)
-				.withDetail(ex.getMessage())
-				.build();
+			.withType(BASE_URI.resolve("/recipient-error"))
+			.withTitle("Recipient not found Error")
+			.withStatus(Status.NOT_FOUND)
+			.withDetail(ex.getMessage())
+			.build();
 		return ResponseEntity.status(Status.NOT_FOUND.getStatusCode()).body(problem);
 	}
 }

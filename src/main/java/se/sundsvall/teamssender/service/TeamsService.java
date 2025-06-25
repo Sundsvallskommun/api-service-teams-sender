@@ -3,11 +3,10 @@ package se.sundsvall.teamssender.service;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toMap;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import jakarta.validation.Valid;
 import lombok.Data;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;

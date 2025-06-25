@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import se.sundsvall.teamssender.exceptions.SendTeamsMessageRequest;
+import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 
 public class MicrosoftGraphTeamsSender implements TeamsSender {
 

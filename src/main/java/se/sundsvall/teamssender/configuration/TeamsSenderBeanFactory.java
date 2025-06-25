@@ -7,6 +7,7 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
@@ -38,7 +39,7 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 	private Map<String, TeamsSenderProperties> teamsSenderPropertiesByMunicipalityId;
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
+	public void afterPropertiesSet() {
 		final var validationBindHandler = new ValidationBindHandler(new SpringValidatorAdapter(validator));
 		final var binder = Binder.get(environment);
 
@@ -48,7 +49,7 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 	}
 
 	@Override
-	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+	public void postProcessBeanFactory(@NotNull ConfigurableListableBeanFactory beanFactory) throws BeansException {
 		final var beanDefinitionRegistry = (BeanDefinitionRegistry) beanFactory;
 
 		teamsSenderPropertiesByMunicipalityId.forEach((municipalityId, teamsSenderProperties) -> {
