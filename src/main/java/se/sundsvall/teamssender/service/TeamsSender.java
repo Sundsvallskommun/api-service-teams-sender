@@ -4,10 +4,10 @@ import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 
 public interface TeamsSender {
 
-    void sendTeamsMessage(SendTeamsMessageRequest request);
+	void sendTeamsMessage(SendTeamsMessageRequest request);
 
-    String getMunicipalityId();
+	String getMunicipalityId();
 
-    void setMunicipalityId(String municipalityId);
+	void setMunicipalityId(String municipalityId);
 
 }

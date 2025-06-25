@@ -25,8 +25,6 @@ public class SendTeamsMessageRequest {
 	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
 	private String message;
 
-	public SendTeamsMessageRequest() {}
-
 	public SendTeamsMessageRequest(String user, String title, String message, String sender) {
 		this.user = user;
 		this.title = title;
