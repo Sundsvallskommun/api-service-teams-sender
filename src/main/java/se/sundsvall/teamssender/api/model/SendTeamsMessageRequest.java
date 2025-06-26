@@ -3,11 +3,11 @@ package se.sundsvall.teamssender.api.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-
+@NoArgsConstructor
 @Schema(description = "Request model for sending a Teams message")
-
 public class SendTeamsMessageRequest {
 
 	@NotBlank
@@ -25,11 +25,10 @@ public class SendTeamsMessageRequest {
 	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
 	private String message;
 
-	public SendTeamsMessageRequest(String user, String title, String message, String sender) {
+	public SendTeamsMessageRequest(String user, String sender, String title, String message) {
 		this.user = user;
+		this.sender = sender;
 		this.title = title;
 		this.message = message;
-		this.sender = sender;
 	}
-
 }
