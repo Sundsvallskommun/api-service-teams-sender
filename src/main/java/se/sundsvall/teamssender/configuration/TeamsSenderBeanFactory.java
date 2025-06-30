@@ -2,6 +2,8 @@ package se.sundsvall.teamssender.configuration;
 
 import static java.util.Objects.nonNull;
 
+import com.azure.identity.AuthorizationCodeCredential;
+import com.azure.identity.AuthorizationCodeCredentialBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.validation.Validator;
@@ -79,7 +81,7 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 
 	void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final TeamsSenderProperties teamsSenderProperties) {
 		final var beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(MicrosoftGraphTeamsSender.class)
-			.addConstructorArgValue(createGraphServiceClient(teamsSenderProperties.azure))
+			.addConstructorArgValue(createGraphServiceClientWithCode(teamsSenderProperties.azure)) //skicka in accesstoken
 			.addPropertyValue("municipalityId", municipalityId)
 			.getBeanDefinition();
 
@@ -94,6 +96,23 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 			.build();
 		return new GraphServiceClient(clientSecretCredential, azureTeamsSenderProperties.scope);
 	}
+
+	public GraphServiceClient createGraphServiceClientWithCode(final TeamsSenderProperties.Azure azureTeamsSenderProperties, String authorizationCode) throws Exception {
+     AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
+           .clientId(azureTeamsSenderProperties.clientId)
+           .tenantId(azureTeamsSenderProperties.tenantId)
+           .clientSecret(azureTeamsSenderProperties.clientSecret)
+           .authorizationCode(authorizationCode)
+           .redirectUrl("http://localhost:8080")
+           .build();
+
+     if (null == azureTeamsSenderProperties.scope || null == credential) {
+        throw new Exception("Unexpected error");
+     }
+
+        return new GraphServiceClient(credential, azureTeamsSenderProperties.scope);
+  }
+
 
 	@Validated
 	record TeamsSenderProperties(
