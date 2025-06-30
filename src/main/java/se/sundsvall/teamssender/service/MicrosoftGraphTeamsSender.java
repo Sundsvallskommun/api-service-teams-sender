@@ -13,6 +13,7 @@ public class MicrosoftGraphTeamsSender implements TeamsSender {
 	private final GraphServiceClient graphClient;
 	private String municipalityId;
 
+
 	public MicrosoftGraphTeamsSender(GraphServiceClient graphClient) {
 		this.graphClient = graphClient;
 	}
