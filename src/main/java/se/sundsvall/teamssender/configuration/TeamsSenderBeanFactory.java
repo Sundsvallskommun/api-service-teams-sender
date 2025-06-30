@@ -81,7 +81,7 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 
 	void registerMicrosoftGraphTeamsSender(final BeanDefinitionRegistry beanDefinitionRegistry, final String municipalityId, final TeamsSenderProperties teamsSenderProperties) {
 		final var beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(MicrosoftGraphTeamsSender.class)
-			.addConstructorArgValue(createGraphServiceClientWithCode(teamsSenderProperties.azure)) //skicka in accesstoken
+			.addConstructorArgValue(createGraphServiceClient(teamsSenderProperties.azure)) // skicka in accesstoken
 			.addPropertyValue("municipalityId", municipalityId)
 			.getBeanDefinition();
 
@@ -98,21 +98,20 @@ class TeamsSenderBeanFactory implements BeanFactoryPostProcessor, ApplicationCon
 	}
 
 	public GraphServiceClient createGraphServiceClientWithCode(final TeamsSenderProperties.Azure azureTeamsSenderProperties, String authorizationCode) throws Exception {
-     AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
-           .clientId(azureTeamsSenderProperties.clientId)
-           .tenantId(azureTeamsSenderProperties.tenantId)
-           .clientSecret(azureTeamsSenderProperties.clientSecret)
-           .authorizationCode(authorizationCode)
-           .redirectUrl("http://localhost:8080")
-           .build();
+		AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
+			.clientId(azureTeamsSenderProperties.clientId)
+			.tenantId(azureTeamsSenderProperties.tenantId)
+			.clientSecret(azureTeamsSenderProperties.clientSecret)
+			.authorizationCode(authorizationCode)
+			.redirectUrl("http://localhost:8080")
+			.build();
 
-     if (null == azureTeamsSenderProperties.scope || null == credential) {
-        throw new Exception("Unexpected error");
-     }
+		if (null == azureTeamsSenderProperties.scope || null == credential) {
+			throw new Exception("Unexpected error");
+		}
 
-        return new GraphServiceClient(credential, azureTeamsSenderProperties.scope);
-  }
-
+		return new GraphServiceClient(credential, azureTeamsSenderProperties.scope);
+	}
 
 	@Validated
 	record TeamsSenderProperties(
