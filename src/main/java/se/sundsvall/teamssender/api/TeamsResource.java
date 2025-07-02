@@ -1,17 +1,16 @@
 package se.sundsvall.teamssender.api;
 
 import com.azure.identity.AuthorizationCodeCredential;
+import com.azure.identity.AuthorizationCodeCredentialBuilder;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import java.io.IOException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,26 +18,23 @@ import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
-import se.sundsvall.teamssender.service.AuthenticationService;
 import se.sundsvall.teamssender.service.TeamsService;
-
-import java.io.IOException;
 
 @RestController
 @Tag(name = "Teams resource", description = "Resource for sending messages in Microsoft Teams")
 @Validated
 class TeamsResource {
 
-	@Autowired
-	private AuthenticationService authenticationService;
-
 	private final TeamsService teamsService;
+	private GraphServiceClient graphServiceClient;
 
-	public TeamsResource(final TeamsService teamsService) {
+	TeamsResource(TeamsService teamsService) {
 		this.teamsService = teamsService;
 	}
 
-
+	public void setGraphServiceClient(GraphServiceClient graphServiceClient) {
+		this.graphServiceClient = graphServiceClient;
+	}
 
 	@PostMapping("{municipalityId}/teams/messages")
 	@Operation(summary = "Send a message in Microsoft Teams", responses = {
@@ -83,34 +79,35 @@ class TeamsResource {
 	})
 
 	ResponseEntity<String> sendTeamsMessage(
-		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Valid @RequestBody final SendTeamsMessageRequest request, @ValidMunicipalityId @PathVariable final String municipalityId) throws Exception {
 
-		@Valid @RequestBody final SendTeamsMessageRequest request) {
-		AuthorizationCodeCredential credential = authenticationService.createCredential(session);
-
-		teamsService.sendTeamsMessage(municipalityId, request);
+		// skicka in graphtoken i sendteamsmessage
+		teamsService.initiateMessage(municipalityId, request, graphServiceClient);
 		return ResponseEntity.ok("Message sent successfully");
 	}
-	@Value("${integration.teams.instances.2281.azure.tenantId}")
-	private String tenantId;
-
-	@Value("${integration.teams.instances.2281.azure.clientId}")
-	private String clientId;
 
 	@GetMapping("/login")
 	public void login(HttpServletResponse response) throws IOException {
 		String authorizationUrl = "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/authorize" +
-				"?client_id={clientId}" +
-				"&response_type=code" +
-				"&redirect_uri={http://localhost:8080}" +
-				"&response_mode=query" +
-				"&scope=Chat.ReadWrite ChatMessage.Send offline_access";
+			"?client_id={clientId}" +
+			"&response_type=code" +
+			"&redirect_uri={http://localhost:8080}" +
+			"&response_mode=query" +
+			"&scope=Chat.ReadWrite ChatMessage.Send offline_access";
 		response.sendRedirect(authorizationUrl);
 	}
 
-	@GetMapping("/redirect")
-	public String redirect(@RequestParam String code, HttpSession session) {
-		session.setAttribute("authorizationCode", code);
-		return "Inloggning lyckades!";
+	@GetMapping("/callback")
+	public String callback(@RequestParam String code) {
+		// Byt auth-kod mot access- och refresh-token
+		AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
+			.clientId("din-client-id")
+			.tenantId("din-tenant-id")
+			.authorizationCode(code)
+			.redirectUrl("din-redirect-url")
+			.build();
+
+		setGraphServiceClient(new GraphServiceClient(credential));
+		return "Autentisering lyckades!";
 	}
 }
