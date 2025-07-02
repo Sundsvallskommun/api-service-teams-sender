@@ -14,6 +14,11 @@ import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +41,6 @@ public class OboTokenService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    // Thread-safe token cache per user
     private final Map<String, TokenResponse> tokenCache = new ConcurrentHashMap<>();
 
     @PostConstruct
@@ -55,50 +59,46 @@ public class OboTokenService {
     }
 
     /**
-     * Exchange frontend user token for MS Graph token + refresh token using OBO.
-     * Cache the token per userId.
+     * Acquire OBO token using Java HttpClient
      */
     public TokenResponse acquireOboToken(String userAccessToken, String userId) throws Exception {
-        HttpPost post = new HttpPost(tokenUrl);
-        post.setHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString());
+        String form = "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8) +
+                "&client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8) +
+                "&grant_type=" + URLEncoder.encode("urn:ietf:params:oauth:grant-type:jwt-bearer", StandardCharsets.UTF_8) +
+                "&requested_token_use=on_behalf_of" +
+                "&scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8) +
+                "&assertion=" + URLEncoder.encode(userAccessToken, StandardCharsets.UTF_8);
 
-        List<NameValuePair> params = List.of(
-                new BasicNameValuePair("client_id", clientId),
-                new BasicNameValuePair("client_secret", clientSecret),
-                new BasicNameValuePair("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer"),
-                new BasicNameValuePair("requested_token_use", "on_behalf_of"),
-                new BasicNameValuePair("scope", scope),
-                new BasicNameValuePair("assertion", userAccessToken)
-        );
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(form))
+                .build();
 
-        post.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(post)) {
-
-            String body = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-            if (response.getCode() != 200) {
-                throw new RuntimeException("OBO token request failed: " + body);
-            }
-
-            JsonNode json = mapper.readTree(body);
-
-            TokenResponse tokenResponse = new TokenResponse();
-            tokenResponse.accessToken = json.get("access_token").asText();
-            tokenResponse.refreshToken = json.get("refresh_token").asText();
-            int expiresIn = json.get("expires_in").asInt();
-            tokenResponse.expiresAt = System.currentTimeMillis() + (expiresIn - 60) * 1000L;
-
-            tokenCache.put(userId, tokenResponse);
-            return tokenResponse;
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("OBO token request failed: " + response.body());
         }
-    }
 
+        JsonNode json = mapper.readTree(response.body());
+
+        TokenResponse tokenResponse = new TokenResponse();
+        tokenResponse.accessToken = json.get("access_token").asText();
+        tokenResponse.refreshToken = json.get("refresh_token").asText();
+        int expiresIn = json.get("expires_in").asInt();
+        tokenResponse.expiresAt = System.currentTimeMillis() + (expiresIn - 60) * 1000L;
+
+        tokenCache.put(userId, tokenResponse);
+
+        return tokenResponse;
+    }
     /**
      * Get a valid access token for userId, refresh if expired.
      */
     public String getAccessTokenForUser(String userId) throws Exception {
-        TokenResponse tokenResponse = tokenCache.get(userId);
+        OboTokenService.TokenResponse tokenResponse = tokenCache.get(userId);
         if (tokenResponse == null) {
             throw new IllegalStateException("No cached token for user: " + userId);
         }
@@ -109,7 +109,7 @@ public class OboTokenService {
         return tokenResponse.accessToken;
     }
 
-    private TokenResponse refreshAccessToken(String refreshToken, String userId) throws Exception {
+    private OboTokenService.TokenResponse refreshAccessToken(String refreshToken, String userId) throws Exception {
         HttpPost post = new HttpPost(tokenUrl);
         post.setHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString());
 
@@ -118,8 +118,7 @@ public class OboTokenService {
                 new BasicNameValuePair("client_secret", clientSecret),
                 new BasicNameValuePair("grant_type", "refresh_token"),
                 new BasicNameValuePair("refresh_token", refreshToken),
-                new BasicNameValuePair("scope", scope)
-        );
+                new BasicNameValuePair("scope", scope));
 
         post.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
 
@@ -143,3 +142,4 @@ public class OboTokenService {
         }
     }
 }
+
