@@ -11,11 +11,3 @@ openapi:
 spring:
   application:
     name: teamssender
-integration:
-  teams:
-    instances:
-      "2281":
-        azure:
-          tenantId: ""
-          clientId: ""
-          clientSecret: ""
