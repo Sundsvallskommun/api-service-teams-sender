@@ -2,6 +2,7 @@ package se.sundsvall.teamssender.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.aad.msal4j.*;
 import jakarta.annotation.PostConstruct;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
@@ -20,9 +21,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class OboTokenService {
@@ -33,24 +38,61 @@ public class OboTokenService {
     @Value("${azure.ad.client-id}")
     private String clientId;
 
-    @Value("${azure.ad.client-secret}")
-    private String clientSecret;
+    @Value("${azure.ad.certificate-path}")
+    private String certificatePath; // path to .pfx or .pem
 
-    private String tokenUrl;
+    @Value("${azure.ad.certificate-password}")
+    private String certificatePassword; // if .pfx is password protected
+
+    private ConfidentialClientApplication app;
+
     private final String scope = "https://graph.microsoft.com/.default";
-
-    private final ObjectMapper mapper = new ObjectMapper();
 
     private final Map<String, TokenResponse> tokenCache = new ConcurrentHashMap<>();
 
     @PostConstruct
-    public void init() {
-        tokenUrl = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token";
+    public void init() throws Exception {
+        // Load private key and cert from PFX file (or PEM)
+        CertificateAndKey certAndKey = loadCertificateAndKey(certificatePath, certificatePassword);
+
+        app = ConfidentialClientApplication.builder(
+                        clientId,
+                        ClientCredentialFactory.createFromCertificate(certAndKey.privateKey, certAndKey.certificate))
+                .authority("https://login.microsoftonline.com/" + tenantId)
+                .build();
+    }
+
+    /**
+     * Simple container for private key and certificate
+     */
+    private static class CertificateAndKey {
+        PrivateKey privateKey;
+        X509Certificate certificate;
+    }
+
+    private CertificateAndKey loadCertificateAndKey(String path, String password) throws Exception {
+        // Implement loading .pfx or .pem here,
+        // For .pfx you can use KeyStore and CertificateFactory to extract PrivateKey and X509Certificate
+        // Example for PFX:
+        /*
+        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        try (FileInputStream fis = new FileInputStream(path)) {
+            keystore.load(fis, password.toCharArray());
+        }
+        String alias = keystore.aliases().nextElement();
+        PrivateKey privateKey = (PrivateKey) keystore.getKey(alias, password.toCharArray());
+        X509Certificate cert = (X509Certificate) keystore.getCertificate(alias);
+
+        CertificateAndKey cak = new CertificateAndKey();
+        cak.privateKey = privateKey;
+        cak.certificate = cert;
+        return cak;
+        */
+        throw new UnsupportedOperationException("Please implement certificate loading");
     }
 
     public static class TokenResponse {
         public String accessToken;
-        public String refreshToken;
         public long expiresAt; // millis epoch
 
         public boolean isExpired() {
@@ -59,87 +101,38 @@ public class OboTokenService {
     }
 
     /**
-     * Acquire OBO token using Java HttpClient
+     * Acquire OBO token using MSAL4J client certificate flow
      */
     public TokenResponse acquireOboToken(String userAccessToken, String userId) throws Exception {
-        String form = "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8) +
-                "&client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8) +
-                "&grant_type=" + URLEncoder.encode("urn:ietf:params:oauth:grant-type:jwt-bearer", StandardCharsets.UTF_8) +
-                "&requested_token_use=on_behalf_of" +
-                "&scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8) +
-                "&assertion=" + URLEncoder.encode(userAccessToken, StandardCharsets.UTF_8);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(tokenUrl))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(form))
+        OnBehalfOfParameters parameters = OnBehalfOfParameters.builder(
+                        Collections.singleton(scope),
+                        new UserAssertion(userAccessToken))
                 .build();
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() != 200) {
-            throw new RuntimeException("OBO token request failed: " + response.body());
+        IAuthenticationResult result;
+        try {
+            result = app.acquireToken(parameters).get();
+        } catch (ExecutionException ee) {
+            throw new RuntimeException("OBO token request failed: " + ee.getCause().getMessage(), ee);
         }
 
-        JsonNode json = mapper.readTree(response.body());
-
         TokenResponse tokenResponse = new TokenResponse();
-        tokenResponse.accessToken = json.get("access_token").asText();
-        tokenResponse.refreshToken = json.get("refresh_token").asText();
-        int expiresIn = json.get("expires_in").asInt();
-        tokenResponse.expiresAt = System.currentTimeMillis() + (expiresIn - 60) * 1000L;
+        tokenResponse.accessToken = result.accessToken();
+        tokenResponse.expiresAt = System.currentTimeMillis() + (result.expiresOnDate().getTime() - System.currentTimeMillis()) - 60000; // 1 min early
 
         tokenCache.put(userId, tokenResponse);
 
         return tokenResponse;
     }
+
     /**
-     * Get a valid access token for userId, refresh if expired.
+     * Get cached access token or throw if missing/expired
      */
     public String getAccessTokenForUser(String userId) throws Exception {
-        OboTokenService.TokenResponse tokenResponse = tokenCache.get(userId);
-        if (tokenResponse == null) {
-            throw new IllegalStateException("No cached token for user: " + userId);
-        }
-        if (tokenResponse.isExpired()) {
-            tokenResponse = refreshAccessToken(tokenResponse.refreshToken, userId);
-            tokenCache.put(userId, tokenResponse);
+        TokenResponse tokenResponse = tokenCache.get(userId);
+        if (tokenResponse == null || tokenResponse.isExpired()) {
+            throw new IllegalStateException("No valid cached token for user: " + userId);
         }
         return tokenResponse.accessToken;
     }
-
-    private OboTokenService.TokenResponse refreshAccessToken(String refreshToken, String userId) throws Exception {
-        HttpPost post = new HttpPost(tokenUrl);
-        post.setHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString());
-
-        List<NameValuePair> params = List.of(
-                new BasicNameValuePair("client_id", clientId),
-                new BasicNameValuePair("client_secret", clientSecret),
-                new BasicNameValuePair("grant_type", "refresh_token"),
-                new BasicNameValuePair("refresh_token", refreshToken),
-                new BasicNameValuePair("scope", scope));
-
-        post.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
-
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(post)) {
-
-            String body = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-            if (response.getCode() != 200) {
-                throw new RuntimeException("Refresh token request failed: " + body);
-            }
-
-            JsonNode json = mapper.readTree(body);
-
-            TokenResponse tokenResponse = new TokenResponse();
-            tokenResponse.accessToken = json.get("access_token").asText();
-            tokenResponse.refreshToken = json.get("refresh_token").asText();
-            int expiresIn = json.get("expires_in").asInt();
-            tokenResponse.expiresAt = System.currentTimeMillis() + (expiresIn - 60) * 1000L;
-
-            return tokenResponse;
-        }
-    }
 }
-

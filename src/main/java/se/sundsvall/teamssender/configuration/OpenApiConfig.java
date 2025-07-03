@@ -14,37 +14,31 @@ import java.util.Map;
 public class OpenApiConfig {
 
 	@Value("${azure.ad.tenant-id}")
-	private String tenantId;;  // Replace with your Azure AD tenant id
+	private String tenantId;
 
-
-	Scopes scopes = new Scopes()
-			.addString("User.Read", "Read user profile")
-			.addString("Chat.ReadWrite", "Read and write chat messages");
-
+	@Value("${azure.ad.client-id}")
+	private String clientId;
 	@Primary
 	@Bean
 	public OpenAPI customizeOpenAPI() {
+
+		Scopes scopes = new Scopes()
+				.addString("User.Read", "Read user profile")
+				.addString("Chat.ReadWrite", "Read and write chat messages");
+
 		OAuthFlow authorizationCodeFlow = new OAuthFlow()
 				.authorizationUrl("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize")
 				.tokenUrl("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token")
 				.scopes(scopes);
 
-		OAuthFlows oauthFlows = new OAuthFlows()
-				.authorizationCode(authorizationCodeFlow);
-		System.out.println(@Value(""));
+		SecurityScheme oauth2Scheme = new SecurityScheme()
+				.type(SecurityScheme.Type.OAUTH2)
+				.description("OAuth2 Authorization Code flow with PKCE")
+				.flows(new OAuthFlows().authorizationCode(authorizationCodeFlow));
 
 		return new OpenAPI()
 				.components(new Components()
-						.addSecuritySchemes("bearerAuth",
-								new SecurityScheme()
-										.type(SecurityScheme.Type.HTTP)
-										.scheme("bearer")
-										.bearerFormat("JWT"))
-						.addSecuritySchemes("oauth2",
-								new SecurityScheme()
-										.type(SecurityScheme.Type.OAUTH2)
-										.flows(oauthFlows)))
-				.addSecurityItem(new SecurityRequirement().addList("oauth2"))
-				.addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
+						.addSecuritySchemes("oauth2", oauth2Scheme))
+				.addSecurityItem(new SecurityRequirement().addList("oauth2"));
 	}
 }
