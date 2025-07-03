@@ -8,8 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.util.Map;
-
 @Configuration
 public class OpenApiConfig {
 
@@ -18,27 +16,28 @@ public class OpenApiConfig {
 
 	@Value("${azure.ad.client-id}")
 	private String clientId;
+
 	@Primary
 	@Bean
 	public OpenAPI customizeOpenAPI() {
 
 		Scopes scopes = new Scopes()
-				.addString("User.Read", "Read user profile")
-				.addString("Chat.ReadWrite", "Read and write chat messages");
+			.addString("User.Read", "Read user profile")
+			.addString("Chat.ReadWrite", "Read and write chat messages");
 
 		OAuthFlow authorizationCodeFlow = new OAuthFlow()
-				.authorizationUrl("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize")
-				.tokenUrl("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token")
-				.scopes(scopes);
+			.authorizationUrl("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize")
+			.tokenUrl("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token")
+			.scopes(scopes);
 
 		SecurityScheme oauth2Scheme = new SecurityScheme()
-				.type(SecurityScheme.Type.OAUTH2)
-				.description("OAuth2 Authorization Code flow with PKCE")
-				.flows(new OAuthFlows().authorizationCode(authorizationCodeFlow));
+			.type(SecurityScheme.Type.OAUTH2)
+			.description("OAuth2 Authorization Code flow with PKCE")
+			.flows(new OAuthFlows().authorizationCode(authorizationCodeFlow));
 
 		return new OpenAPI()
-				.components(new Components()
-						.addSecuritySchemes("oauth2", oauth2Scheme))
-				.addSecurityItem(new SecurityRequirement().addList("oauth2"));
+			.components(new Components()
+				.addSecuritySchemes("oauth2", oauth2Scheme))
+			.addSecurityItem(new SecurityRequirement().addList("oauth2"));
 	}
 }

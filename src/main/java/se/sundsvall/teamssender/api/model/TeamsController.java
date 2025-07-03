@@ -19,10 +19,10 @@ public class TeamsController {
 
 	@PostMapping("/send-message")
 	public ResponseEntity<String> sendMessage(
-			@RequestHeader("Authorization") String authHeader,
-			@RequestParam String fromUser,
-			@RequestParam String toUser,
-			@RequestBody String message) {
+		@RequestHeader("Authorization") String authHeader,
+		@RequestParam String fromUser,
+		@RequestParam String toUser,
+		@RequestBody String message) {
 
 		try {
 			// Plocka ut token från header, ta bort "Bearer "
