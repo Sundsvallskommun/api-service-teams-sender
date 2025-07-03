@@ -23,8 +23,8 @@ public class OboTokenService {
 	@Value("${azure.ad.certificate-path}")
 	private String certificatePath; // path to .pfx or .pem
 
-	@Value("${azure.ad.certificate-password}")
-	private String certificatePassword; // if .pfx is password protected
+	@Value("${azure.ad.certificate-key}")
+	private String certificateKey; //
 
 	private ConfidentialClientApplication app;
 
@@ -35,7 +35,7 @@ public class OboTokenService {
 	@PostConstruct
 	public void init() throws Exception {
 		// Load private key and cert from PFX file (or PEM)
-		CertificateAndKey certAndKey = loadCertificateAndKey(certificatePath, certificatePassword);
+		CertificateAndKey certAndKey = loadCertificateAndKey(certificatePath, certificateKey);
 
 		app = ConfidentialClientApplication.builder(
 			clientId,
@@ -53,24 +53,16 @@ public class OboTokenService {
 	}
 
 	private CertificateAndKey loadCertificateAndKey(String path, String password) throws Exception {
-		// Implement loading .pfx or .pem here,
-		// For .pfx you can use KeyStore and CertificateFactory to extract PrivateKey and X509Certificate
-		// Example for PFX:
-		/*
-		 * KeyStore keystore = KeyStore.getInstance("PKCS12");
-		 * try (FileInputStream fis = new FileInputStream(path)) {
-		 * keystore.load(fis, password.toCharArray());
-		 * }
-		 * String alias = keystore.aliases().nextElement();
-		 * PrivateKey privateKey = (PrivateKey) keystore.getKey(alias, password.toCharArray());
-		 * X509Certificate cert = (X509Certificate) keystore.getCertificate(alias);
-		 * 
-		 * CertificateAndKey cak = new CertificateAndKey();
-		 * cak.privateKey = privateKey;
-		 * cak.certificate = cert;
-		 * return cak;
-		 */
-		throw new UnsupportedOperationException("Please implement certificate loading");
+		// Här antar vi att path är en mapp eller basnamn och att du har:
+		// certifikat i PEM: path + ".crt" eller ".pem"
+		// privat nyckel i PEM: path + ".key" eller ".pem"
+		String certPath = certificatePath; // eller .crt
+		String keyPath = certificateKey;
+
+		CertificateAndKey cak = new CertificateAndKey();
+		cak.privateKey = PemUtils.readPrivateKey(keyPath);
+		cak.certificate = PemUtils.readCertificate(certPath);
+		return cak;
 	}
 
 	public static class TokenResponse {
