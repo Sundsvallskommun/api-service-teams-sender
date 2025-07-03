@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.api.model;
+package se.sundsvall.teamssender.api;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
