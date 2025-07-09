@@ -22,7 +22,7 @@ public class OpenApiConfig {
 	public OpenAPI customizeOpenAPI() {
 
 		Scopes scopes = new Scopes()
-			.addString("api://"+clientId+"/access_as_user", "Access my API")
+			.addString("api://" + clientId + "/access_as_user", "Access my API")
 			.addString("User.Read", "Read user profile")
 			.addString("Chat.ReadWrite", "Read and write chat messages");
 

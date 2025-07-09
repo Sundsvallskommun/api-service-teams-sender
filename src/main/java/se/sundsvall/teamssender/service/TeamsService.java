@@ -108,7 +108,6 @@ public class TeamsService {
 			}
 			""".formatted(user1Id, user2Id);
 
-
 		request.setEntity(new StringEntity(jsonBody, StandardCharsets.UTF_8));
 
 		try (CloseableHttpClient client = HttpClients.createDefault();
