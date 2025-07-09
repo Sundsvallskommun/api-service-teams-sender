@@ -2,14 +2,22 @@ package se.sundsvall.teamssender.service;
 
 import com.microsoft.aad.msal4j.*;
 import jakarta.annotation.PostConstruct;
+
+import java.security.MessageDigest;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.xml.bind.DatatypeConverter;
 
 @Service
 public class OboTokenService {
@@ -34,8 +42,30 @@ public class OboTokenService {
 
 	@PostConstruct
 	public void init() throws Exception {
+
+		if (Security.getProvider("BC") == null) {
+			Security.addProvider(new BouncyCastleProvider());
+		}
+
 		// Load private key and cert from PFX file (or PEM)
 		CertificateAndKey certAndKey = loadCertificateAndKey(certificatePath, certificateKey);
+		// 🔍 Logga thumbprint från certifikatet som faktiskt används
+		byte[] encoded = certAndKey.certificate.getEncoded();
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		byte[] digest = md.digest(encoded);
+		String thumbprint = DatatypeConverter.printHexBinary(digest).toLowerCase();
+		System.out.println("🔍 Using cert thumbprint (calculated): " + thumbprint);
+
+		System.out.println("🔍 Genererar JWT manuellt...");
+
+		String jwt = JwtDebugUtil.createClientAssertion(
+				clientId,
+				tenantId,
+				certAndKey.certificate,
+				(RSAPrivateKey) certAndKey.privateKey
+		);
+
+		System.out.println("🔐 JWT client_assertion:\n" + jwt);
 
 		app = ConfidentialClientApplication.builder(
 			clientId,
