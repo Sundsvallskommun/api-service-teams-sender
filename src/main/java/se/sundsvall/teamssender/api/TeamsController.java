@@ -23,6 +23,10 @@ public class TeamsController {
 		@RequestParam String fromUser,
 		@RequestParam String toUser,
 		@RequestBody String message) {
+		System.out.println("From: " + fromUser);
+		System.out.println("To: " + toUser);
+		System.out.println("Message: " + message);
+		System.out.println("Auth header: " + authHeader);
 
 		try {
 			// Plocka ut token från header, ta bort "Bearer "

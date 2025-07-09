@@ -108,6 +108,7 @@ public class OboTokenService {
 	 * Acquire OBO token using MSAL4J client certificate flow
 	 */
 	public TokenResponse acquireOboToken(String userAccessToken, String userId) throws Exception {
+		System.out.println("🛂 Incoming user token (from Swagger): " + userAccessToken);
 		OnBehalfOfParameters parameters = OnBehalfOfParameters.builder(
 			Collections.singleton(scope),
 			new UserAssertion(userAccessToken))
@@ -116,8 +117,16 @@ public class OboTokenService {
 		IAuthenticationResult result;
 		try {
 			result = app.acquireToken(parameters).get();
+			// Här loggar du token för att se vad du får tillbaka:
+			System.out.println("🔐 Access token:\n" + result.accessToken());
+			System.out.println("🔐 ID token:\n" + result.idToken()); // Kan vara null i OBO-flödet
 		} catch (ExecutionException ee) {
-			throw new RuntimeException("OBO token request failed: " + ee.getCause().getMessage(), ee);
+			System.err.println("OBO token request failed: " + ee.getCause().getMessage());
+			ee.getCause().printStackTrace();
+			throw ee;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
 		}
 
 		TokenResponse tokenResponse = new TokenResponse();
