@@ -2,7 +2,6 @@ package se.sundsvall.teamssender.service;
 
 import com.microsoft.aad.msal4j.*;
 import jakarta.annotation.PostConstruct;
-
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.Security;
@@ -12,12 +11,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-
+import javax.xml.bind.DatatypeConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import javax.xml.bind.DatatypeConverter;
 
 @Service
 public class OboTokenService {
@@ -59,11 +56,10 @@ public class OboTokenService {
 		System.out.println("🔍 Genererar JWT manuellt...");
 
 		String jwt = JwtDebugUtil.createClientAssertion(
-				clientId,
-				tenantId,
-				certAndKey.certificate,
-				(RSAPrivateKey) certAndKey.privateKey
-		);
+			clientId,
+			tenantId,
+			certAndKey.certificate,
+			(RSAPrivateKey) certAndKey.privateKey);
 
 		System.out.println("🔐 JWT client_assertion:\n" + jwt);
 
