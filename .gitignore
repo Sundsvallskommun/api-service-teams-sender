@@ -57,3 +57,4 @@ application-default.*
 /src/main/resources/application.properties
 /src/main/resources/openapi.yml
 /src/main/resources/cert/
+/src/main/resources/truststore/

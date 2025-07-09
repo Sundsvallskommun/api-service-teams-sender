@@ -1,5 +1,8 @@
 package se.sundsvall.teamssender.service;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
@@ -17,9 +20,11 @@ public class PemUtils {
             Object object = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
 
-            if (object instanceof org.bouncycastle.openssl.PEMKeyPair) {
-                return converter.getPrivateKey(((org.bouncycastle.openssl.PEMKeyPair) object).getPrivateKeyInfo());
-            } else if (object instanceof org.bouncycastle.openssl.PEMEncryptedKeyPair) {
+            if (object instanceof PEMKeyPair) {
+                return converter.getPrivateKey(((PEMKeyPair) object).getPrivateKeyInfo());
+            } else if (object instanceof PrivateKeyInfo) {
+                return converter.getPrivateKey((PrivateKeyInfo) object);
+            } else if (object instanceof PEMEncryptedKeyPair) {
                 throw new UnsupportedOperationException("Krypterade PEM-nycklar stöds inte i detta exempel");
             } else {
                 throw new IllegalArgumentException("Ogiltigt PEM-format för privat nyckel");
