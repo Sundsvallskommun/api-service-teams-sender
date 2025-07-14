@@ -25,10 +25,15 @@ public class SendTeamsMessageRequest {
 	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
 	private String message;
 
+	@NotBlank
+	@Schema(description = "The bearertoken from sender", example = "eyxxxxxxxxxxxxxxxxxxxxxxxx", required = true)
+	private String token;
+
 	public SendTeamsMessageRequest(String user, String sender, String title, String message) {
 		this.user = user;
 		this.sender = sender;
 		this.title = title;
 		this.message = message;
+		this.token = token;
 	}
 }
