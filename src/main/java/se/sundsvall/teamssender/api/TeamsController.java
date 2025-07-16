@@ -171,17 +171,16 @@ public class TeamsController {
 		@GetMapping("/login")
 		public void login(HttpServletResponse response) throws IOException {
 
-			Scopes scopes = new Scopes()
-					.addString("api://" + clientId + "/access_as_user", "Access my API")
-					.addString("User.Read", "Read user profile")
-					.addString("Chat.ReadWrite", "Read and write chat messages");
+
+					String scopes = "User.Read Chat.ReadWrite api://<clientId>/access_as_user";
+
 
 			String url = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize" +
 					"?client_id=" + clientId +
 					"&response_type=code" +
 					"&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8) +
 					"&response_mode=query" +
-					"&scope=" + URLEncoder.encode(String.valueOf(scopes), StandardCharsets.UTF_8) +
+					"&scope=" + URLEncoder.encode(scopes, StandardCharsets.UTF_8) +
 					"&state=12345";
 
 			response.sendRedirect(url);
