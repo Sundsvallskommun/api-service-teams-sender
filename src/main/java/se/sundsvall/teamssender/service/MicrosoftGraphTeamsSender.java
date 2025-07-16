@@ -6,6 +6,7 @@ import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.kiota.RequestAdapter;
 import com.microsoft.kiota.authentication.AuthenticationProvider;
+import org.springframework.beans.factory.annotation.Value;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import com.microsoft.graph.authenticationmethodconfigurations.AuthenticationMethodConfigurationsRequestBuilder;
 import se.sundsvall.teamssender.repository.OAuthSessionRepository;
@@ -85,6 +86,19 @@ import java.util.List;
 //	}
 //}
 public class MicrosoftGraphTeamsSender {
+	@Value("${azure.ad.tenant-id}")
+	private String tenantId;
+
+	@Value("${azure.ad.client-id}")
+	private String clientId;
+
+	@Value("${azure.ad.certificate-path}")
+	private String certificatePath; // path to .pfx or .pem
+
+	@Value("${azure.ad.certificate-key}")
+	private String certificateKey; //
+	@Value ("${azure.ad.client-secret}")
+	private String clientSecret;
 
 	private final GraphServiceClient graphClient;
 	private final OAuthSessionRepository oAuthSessionRepository;
@@ -94,11 +108,11 @@ public class MicrosoftGraphTeamsSender {
 
 		// Exempel på init
 		AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
-				.clientId("clientId")
-				.tenantId("tenantId")
-				.clientSecret("clientSecret")
+				.clientId(clientId)
+				.tenantId(tenantId)
+				.clientSecret(clientSecret)
 				.authorizationCode("authCode")
-				.redirectUrl("http://localhost")
+				.redirectUrl("http://localhost:8080/")
 				.build();
 
 			this.graphClient = new GraphServiceClient(credential);

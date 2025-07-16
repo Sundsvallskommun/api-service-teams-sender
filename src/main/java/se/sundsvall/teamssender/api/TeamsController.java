@@ -1,14 +1,18 @@
 package se.sundsvall.teamssender.api;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.models.security.Scopes;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.service.MicrosoftGraphTeamsSender;
 import se.sundsvall.teamssender.service.TokenService;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 //package se.sundsvall.teamssender.api;
 //
@@ -115,6 +119,14 @@ import se.sundsvall.teamssender.service.TokenService;
 @RequestMapping("/api/teams")
 public class TeamsController {
 
+	@Value("${azure.ad.tenant-id}")
+	private String tenantId;
+	@Value("${azure.ad.client-id}")
+	private String clientId;
+	@Value ("${azure.ad.client-secret}")
+	private String clientSecret;
+	@Value ("${azure.ad.redirecturi}")
+	private String redirectUri;
 	private final MicrosoftGraphTeamsSender teamsSender;
 
 	// Konstruktorinjektion (Autowired fungerar också men constructor preferred)
@@ -143,6 +155,47 @@ public class TeamsController {
 			return ResponseEntity.ok("Auth test endpoint - implementera tokenhämtning");
 		} catch (Exception e) {
 			return ResponseEntity.status(500).body("Auth test failed: " + e.getMessage());
+		}
+	}
+
+	@RestController
+	@RequestMapping("/auth")
+	public class AuthController {
+
+		private final TokenService tokenService; // injecta denna via konstruktor
+
+		public AuthController(TokenService tokenService) {
+			this.tokenService = tokenService;
+		}
+
+		@GetMapping("/login")
+		public void login(HttpServletResponse response) throws IOException {
+
+			Scopes scopes = new Scopes()
+					.addString("api://" + clientId + "/access_as_user", "Access my API")
+					.addString("User.Read", "Read user profile")
+					.addString("Chat.ReadWrite", "Read and write chat messages");
+
+			String url = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize" +
+					"?client_id=" + clientId +
+					"&response_type=code" +
+					"&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8) +
+					"&response_mode=query" +
+					"&scope=" + URLEncoder.encode(String.valueOf(scopes), StandardCharsets.UTF_8) +
+					"&state=12345";
+
+			response.sendRedirect(url);
+		}
+		@GetMapping("/callback")
+		public ResponseEntity<String> callback(@RequestParam String code, @RequestParam String state) {
+			try {
+				// Byt authorization code mot access token och refresh token
+				tokenService.exchangeAuthorizationCodeForToken(code);
+
+				return ResponseEntity.ok("Login succeeded, tokens saved!");
+			} catch (Exception e) {
+				return ResponseEntity.status(500).body("Login failed: " + e.getMessage());
+			}
 		}
 	}
 }
