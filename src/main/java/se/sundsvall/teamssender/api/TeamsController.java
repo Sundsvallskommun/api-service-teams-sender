@@ -1,7 +1,13 @@
 package se.sundsvall.teamssender.api;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
+import se.sundsvall.teamssender.service.MicrosoftGraphTeamsSender;
 import se.sundsvall.teamssender.service.TokenService;
 
 //package se.sundsvall.teamssender.api;
@@ -109,10 +115,34 @@ import se.sundsvall.teamssender.service.TokenService;
 @RequestMapping("/api/teams")
 public class TeamsController {
 
-	private final TokenService tokenService;
+	private final MicrosoftGraphTeamsSender teamsSender;
 
-	public TeamsController(TokenService tokenService) {
-		this.tokenService = tokenService;
+	// Konstruktorinjektion (Autowired fungerar också men constructor preferred)
+	public TeamsController(MicrosoftGraphTeamsSender teamsSender) {
+		this.teamsSender = teamsSender;
 	}
 
+	// POST endpoint för att skicka Teams-meddelande
+	@PostMapping("/send")
+	public ResponseEntity<String> sendTeamsMessage(@RequestBody SendTeamsMessageRequest request) {
+		try {
+			teamsSender.sendTeamsMessage(request);
+			return ResponseEntity.ok("Message sent successfully");
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body("Failed to send message: " + e.getMessage());
+		}
+	}
+
+	// GET endpoint för test av inloggning/token (exempel)
+	@GetMapping("/test-auth")
+	public ResponseEntity<String> testAuth() {
+		try {
+			// Exempel: hämta access token från din TokenService (lägg in TokenService i konstruktorn)
+			// String token = tokenService.getValidAccessToken("userId");
+			// return ResponseEntity.ok("Token fetched: " + token);
+			return ResponseEntity.ok("Auth test endpoint - implementera tokenhämtning");
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body("Auth test failed: " + e.getMessage());
+		}
+	}
 }
