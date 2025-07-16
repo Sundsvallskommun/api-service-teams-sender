@@ -12,28 +12,28 @@ public class SendTeamsMessageRequest {
 
 	@NotBlank
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
-	private String user;
+	private String User;
 
 	@NotBlank
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
-	private String sender;
+	private String Sender;
 
 	@Schema(description = "The title of the message", example = "Weekly Update", required = true)
 	private String title;
 
 	@NotBlank
 	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
-	private String message;
+	private String Message;
 
 	@NotBlank
 	@Schema(description = "The bearertoken from sender", example = "eyxxxxxxxxxxxxxxxxxxxxxxxx", required = true)
 	private String token;
 
 	public SendTeamsMessageRequest(String user, String sender, String title, String message) {
-		this.user = user;
-		this.sender = sender;
+		this.User = user;
+		this.Sender = sender;
 		this.title = title;
-		this.message = message;
+		this.Message = message;
 		this.token = token;
 	}
 }

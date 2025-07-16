@@ -1,0 +1,77 @@
+package se.sundsvall.teamssender.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.*;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Optional;
+import org.springframework.stereotype.Service;
+import se.sundsvall.teamssender.entity.OAuthSession;
+import se.sundsvall.teamssender.repository.OAuthSessionRepository;
+
+@Service
+public class TokenService {
+
+	private final OAuthSessionRepository repo;
+	private final String tenantId = "<YOUR_TENANT_ID>";
+	private final String clientId = "<YOUR_CLIENT_ID>";
+	private final String clientSecret = "<YOUR_CLIENT_SECRET>";
+
+	public TokenService(OAuthSessionRepository repo) {
+		this.repo = repo;
+	}
+
+	public synchronized String getValidAccessToken(String userId) {
+		Optional<OAuthSession> sessionOptional = repo.findByUserId(userId);
+		if (!sessionOptional.isPresent()) {
+			throw new RuntimeException("No session for user " + userId);
+		}
+		OAuthSession session = sessionOptional.get();
+
+		Instant now = Instant.now();
+		if (now.isAfter(session.getExpiresAt().minusSeconds(300))) {
+			refreshToken(session);
+		}
+		return session.getAccessToken();
+	}
+
+	private void refreshToken(OAuthSession session) {
+		try {
+			HttpClient client = HttpClient.newHttpClient();
+
+			String scopes = URLEncoder.encode("User.Read Chat.ReadWrite api://" + clientId + "/access_as_user", StandardCharsets.UTF_8);
+			String body = "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
+				+ "&scope=" + scopes
+				+ "&refresh_token=" + URLEncoder.encode(session.getRefreshToken(), StandardCharsets.UTF_8)
+				+ "&grant_type=refresh_token"
+				+ "&client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8);
+
+			HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token"))
+				.header("Content-Type", "application/x-www-form-urlencoded")
+				.POST(HttpRequest.BodyPublishers.ofString(body))
+				.build();
+
+			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode json = mapper.readTree(response.body());
+
+			String newAccessToken = json.get("access_token").asText();
+			String newRefreshToken = json.has("refresh_token") ? json.get("refresh_token").asText() : session.getRefreshToken();
+			int expiresIn = json.get("expires_in").asInt();
+
+			session.setAccessToken(newAccessToken);
+			session.setRefreshToken(newRefreshToken);
+			session.setExpiresAt(Instant.now().plusSeconds(expiresIn));
+
+			repo.save(session);
+
+		} catch (Exception e) {
+			throw new RuntimeException("Could not refresh token", e);
+		}
+	}
+}

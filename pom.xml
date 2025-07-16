@@ -23,12 +23,23 @@
 		<dependency>
 			<groupId>com.microsoft.graph</groupId>
 			<artifactId>microsoft-graph</artifactId>
-			<version>[6.0,)</version>
+			<version>[6.45,)</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.graph</groupId>
+			<artifactId>microsoft-graph-auth</artifactId>
+			<version>0.3.0</version>
+			<!-- auth provider, kan behövas -->
 		</dependency>
 		<dependency>
 			<groupId>com.microsoft.graph</groupId>
 			<artifactId>microsoft-graph-beta</artifactId>
 			<version>[6.0,)</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.graph</groupId>
+			<artifactId>microsoft-graph-core</artifactId>
+			<version>3.6.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.azure</groupId>
@@ -50,6 +61,10 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
 	</dependencies>

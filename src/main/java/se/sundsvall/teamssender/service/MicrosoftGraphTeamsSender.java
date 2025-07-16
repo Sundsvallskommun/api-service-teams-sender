@@ -1,56 +1,139 @@
 package se.sundsvall.teamssender.service;
 
+import com.azure.identity.AuthorizationCodeCredential;
+import com.azure.identity.AuthorizationCodeCredentialBuilder;
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import com.microsoft.kiota.RequestAdapter;
+import com.microsoft.kiota.authentication.AuthenticationProvider;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
+import com.microsoft.graph.authenticationmethodconfigurations.AuthenticationMethodConfigurationsRequestBuilder;
+import se.sundsvall.teamssender.repository.OAuthSessionRepository;
 
-public class MicrosoftGraphTeamsSender implements TeamsSender {
+import java.util.*;
+import java.util.List;
+
+//package se.sundsvall.teamssender.service;
+//
+//import com.microsoft.graph.models.*;
+//import com.microsoft.graph.serviceclient.GraphServiceClient;
+//import java.util.HashMap;
+//import java.util.LinkedList;
+//import java.util.List;
+//
+//public abstract class MicrosoftGraphTeamsSender implements TeamsSender {
+//
+//	private final GraphServiceClient graphClient;
+//	private String municipalityId;
+//
+//	public MicrosoftGraphTeamsSender(GraphServiceClient graphClient) {
+//		this.graphClient = graphClient;
+//	}
+//
+//	@Override
+//	public String getMunicipalityId() {
+//		return municipalityId;
+//	}
+//
+//	@Override
+//	public void setMunicipalityId(final String municipalityId) {
+//		this.municipalityId = municipalityId;
+//	}
+//
+//	public Chat createChat(String user1Id, String user2Id) {
+//		Chat chat = new Chat();
+//		chat.setChatType(ChatType.OneOnOne);
+//
+//		LinkedList<ConversationMember> members = new LinkedList<>();
+//		members.add(createMember(user1Id));
+//		members.add(createMember(user2Id));
+//		chat.setMembers(members);
+//
+//		return graphClient.chats().post(chat);
+//	}
+//
+//	public void sendTeamsMessage(SendTeamsMessageRequest request) {
+//		var createdChat = createChat(request.getUser(), request.getSender());
+//		var chatMessage = createMessage(request.getMessage());
+//
+//		graphClient.chats()
+//			.byChatId(Objects.requireNonNull(createdChat.getId()))
+//			.messages()
+//			.post(chatMessage);
+//	}
+//
+//	public ChatMessage createMessage(String message) {
+//		ItemBody body = new ItemBody();
+//		body.setContent(message);
+//
+//		ChatMessage chatMessage = new ChatMessage();
+//		chatMessage.setBody(body);
+//
+//		return chatMessage;
+//	}
+//
+//	private AadUserConversationMember createMember(String userId) {
+//		AadUserConversationMember member = new AadUserConversationMember();
+//		member.setOdataType("#microsoft.graph.aadUserConversationMember");
+//		member.setRoles(List.of("owner"));
+//
+//		HashMap<String, Object> additionalData = new HashMap<>();
+//		additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + userId + "')");
+//		member.setAdditionalData(additionalData);
+//
+//		return member;
+//	}
+//}
+public class MicrosoftGraphTeamsSender {
 
 	private final GraphServiceClient graphClient;
-	private String municipalityId;
+	private final OAuthSessionRepository oAuthSessionRepository;
 
-	public MicrosoftGraphTeamsSender(GraphServiceClient graphClient) {
-		this.graphClient = graphClient;
+	public MicrosoftGraphTeamsSender(OAuthSessionRepository oAuthSessionRepository) {
+		this.oAuthSessionRepository = oAuthSessionRepository;
+
+		// Exempel på init
+		AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
+				.clientId("clientId")
+				.tenantId("tenantId")
+				.clientSecret("clientSecret")
+				.authorizationCode("authCode")
+				.redirectUrl("http://localhost")
+				.build();
+
+			this.graphClient = new GraphServiceClient(credential);
 	}
 
-	@Override
-	public String getMunicipalityId() {
-		return municipalityId;
-	}
-
-	@Override
-	public void setMunicipalityId(final String municipalityId) {
-		this.municipalityId = municipalityId;
+	public GraphServiceClient getGraphClient() {
+		return graphClient;
 	}
 
 	public Chat createChat(String user1Id, String user2Id) {
 		Chat chat = new Chat();
 		chat.setChatType(ChatType.OneOnOne);
 
-		LinkedList<ConversationMember> members = new LinkedList<>();
+		List<ConversationMember> members = new LinkedList<>();
 		members.add(createMember(user1Id));
 		members.add(createMember(user2Id));
+
 		chat.setMembers(members);
 
 		return graphClient.chats().post(chat);
 	}
 
 	public void sendTeamsMessage(SendTeamsMessageRequest request) {
-		var createdChat = createChat(request.getUser(), request.getSender());
-		var chatMessage = createMessage(request.getMessage());
+		Chat createdChat = createChat(request.getUser(), request.getSender());
+		ChatMessage chatMessage = createMessage(request.getMessage());
 
 		graphClient.chats()
-			.byChatId(Objects.requireNonNull(createdChat.getId()))
-			.messages()
-			.post(chatMessage);
+				.byChatId(Objects.requireNonNull(createdChat.getId()))
+				.messages()
+				.post(chatMessage);
 	}
 
-	public ChatMessage createMessage(String message) {
+	private ChatMessage createMessage(String message) {
 		ItemBody body = new ItemBody();
+		body.setContentType(BodyType.Text);
 		body.setContent(message);
 
 		ChatMessage chatMessage = new ChatMessage();
@@ -59,12 +142,12 @@ public class MicrosoftGraphTeamsSender implements TeamsSender {
 		return chatMessage;
 	}
 
-	private AadUserConversationMember createMember(String userId) {
+	private ConversationMember createMember(String userId) {
 		AadUserConversationMember member = new AadUserConversationMember();
 		member.setOdataType("#microsoft.graph.aadUserConversationMember");
-		member.setRoles(List.of("owner"));
+		member.setRoles(Collections.singletonList("owner"));
 
-		HashMap<String, Object> additionalData = new HashMap<>();
+		Map<String, Object> additionalData = new HashMap<>();
 		additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + userId + "')");
 		member.setAdditionalData(additionalData);
 
