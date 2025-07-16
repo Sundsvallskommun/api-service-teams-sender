@@ -119,14 +119,6 @@ import java.nio.charset.StandardCharsets;
 @RequestMapping("/api/teams")
 public class TeamsController {
 
-	@Value("${azure.ad.tenant-id}")
-	private String tenantId;
-	@Value("${azure.ad.client-id}")
-	private String clientId;
-	@Value ("${azure.ad.client-secret}")
-	private String clientSecret;
-	@Value ("${azure.ad.redirecturi}")
-	private String redirectUri;
 	private final MicrosoftGraphTeamsSender teamsSender;
 
 	// Konstruktorinjektion (Autowired fungerar också men constructor preferred)
@@ -142,59 +134,6 @@ public class TeamsController {
 			return ResponseEntity.ok("Message sent successfully");
 		} catch (Exception e) {
 			return ResponseEntity.status(500).body("Failed to send message: " + e.getMessage());
-		}
-	}
-
-	// GET endpoint för test av inloggning/token (exempel)
-	@GetMapping("/test-auth")
-	public ResponseEntity<String> testAuth() {
-		try {
-			// Exempel: hämta access token från din TokenService (lägg in TokenService i konstruktorn)
-			// String token = tokenService.getValidAccessToken("userId");
-			// return ResponseEntity.ok("Token fetched: " + token);
-			return ResponseEntity.ok("Auth test endpoint - implementera tokenhämtning");
-		} catch (Exception e) {
-			return ResponseEntity.status(500).body("Auth test failed: " + e.getMessage());
-		}
-	}
-
-	@RestController
-	@RequestMapping("/auth")
-	public class AuthController {
-
-		private final TokenService tokenService; // injecta denna via konstruktor
-
-		public AuthController(TokenService tokenService) {
-			this.tokenService = tokenService;
-		}
-
-		@GetMapping("/login")
-		public void login(HttpServletResponse response) throws IOException {
-
-
-					String scopes = "User.Read Chat.ReadWrite api://<clientId>/access_as_user";
-
-
-			String url = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize" +
-					"?client_id=" + clientId +
-					"&response_type=code" +
-					"&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8) +
-					"&response_mode=query" +
-					"&scope=" + URLEncoder.encode(scopes, StandardCharsets.UTF_8) +
-					"&state=12345";
-
-			response.sendRedirect(url);
-		}
-		@GetMapping("/callback")
-		public ResponseEntity<String> callback(@RequestParam String code, @RequestParam String state) {
-			try {
-				// Byt authorization code mot access token och refresh token
-				tokenService.exchangeAuthorizationCodeForToken(code);
-
-				return ResponseEntity.ok("Login succeeded, tokens saved!");
-			} catch (Exception e) {
-				return ResponseEntity.status(500).body("Login failed: " + e.getMessage());
-			}
 		}
 	}
 }

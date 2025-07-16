@@ -7,6 +7,7 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.kiota.RequestAdapter;
 import com.microsoft.kiota.authentication.AuthenticationProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import com.microsoft.graph.authenticationmethodconfigurations.AuthenticationMethodConfigurationsRequestBuilder;
 import se.sundsvall.teamssender.repository.OAuthSessionRepository;
@@ -85,6 +86,7 @@ import java.util.List;
 //		return member;
 //	}
 //}
+@Service
 public class MicrosoftGraphTeamsSender {
 	@Value("${azure.ad.tenant-id}")
 	private String tenantId;
