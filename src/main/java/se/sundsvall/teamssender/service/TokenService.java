@@ -8,6 +8,8 @@ import java.net.http.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.entity.OAuthSession;
 import se.sundsvall.teamssender.repository.OAuthSessionRepository;
@@ -15,10 +17,13 @@ import se.sundsvall.teamssender.repository.OAuthSessionRepository;
 @Service
 public class TokenService {
 
-	private final OAuthSessionRepository repo;
-	private final String tenantId = "<YOUR_TENANT_ID>";
-	private final String clientId = "<YOUR_CLIENT_ID>";
-	private final String clientSecret = "<YOUR_CLIENT_SECRET>";
+	@Value("${azure.ad.tenant-id}")
+	private String tenantId;
+	@Value("${azure.ad.client-id}")
+	private String clientId;
+	@Value ("${azure.ad.client-secret}")
+	private String clientSecret;
+
 
 	public TokenService(OAuthSessionRepository repo) {
 		this.repo = repo;

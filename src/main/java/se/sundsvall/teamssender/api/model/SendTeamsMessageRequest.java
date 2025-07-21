@@ -18,19 +18,15 @@ public class SendTeamsMessageRequest {
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
 	private String Sender;
 
-	@Schema(description = "The title of the message", example = "Weekly Update", required = true)
-	private String title;
-
 	@NotBlank
 	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
 	private String Message;
 
 
 
-	public SendTeamsMessageRequest(String user, String sender, String title, String message) {
+	public SendTeamsMessageRequest(String user, String sender, String message) {
 		this.User = user;
 		this.Sender = sender;
-		this.title = title;
 		this.Message = message;
 	}
 }

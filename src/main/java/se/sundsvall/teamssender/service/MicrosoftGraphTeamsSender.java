@@ -4,12 +4,10 @@ import com.azure.identity.AuthorizationCodeCredential;
 import com.azure.identity.AuthorizationCodeCredentialBuilder;
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import com.microsoft.kiota.RequestAdapter;
-import com.microsoft.kiota.authentication.AuthenticationProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
-import com.microsoft.graph.authenticationmethodconfigurations.AuthenticationMethodConfigurationsRequestBuilder;
+import se.sundsvall.teamssender.entity.OAuthSession;
 import se.sundsvall.teamssender.repository.OAuthSessionRepository;
 
 import java.util.*;
@@ -94,34 +92,56 @@ public class MicrosoftGraphTeamsSender {
 	@Value("${azure.ad.client-id}")
 	private String clientId;
 
-	@Value("${azure.ad.certificate-path}")
-	private String certificatePath; // path to .pfx or .pem
-
-	@Value("${azure.ad.certificate-key}")
-	private String certificateKey; //
 	@Value ("${azure.ad.client-secret}")
 	private String clientSecret;
 
-	private final GraphServiceClient graphClient;
+	private GraphServiceClient graphClient;
 	private final OAuthSessionRepository oAuthSessionRepository;
 
 	public MicrosoftGraphTeamsSender(OAuthSessionRepository oAuthSessionRepository) {
 		this.oAuthSessionRepository = oAuthSessionRepository;
+	}
 
-		// Exempel på init
-		AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
-				.clientId(clientId)
-				.tenantId(tenantId)
-				.clientSecret(clientSecret)
-				.authorizationCode("authCode")
-				.redirectUrl("http://localhost:8080/")
-				.build();
+	// Väntar på token i upp till maxWaitMillis, pollar var pollIntervalMillis
+	public synchronized void waitForAndInitializeClient(String userId, long maxWaitMillis, long pollIntervalMillis) throws InterruptedException {
+		long waited = 0;
+		while (waited < maxWaitMillis) {
+			Optional<OAuthSession> sessionOpt = oAuthSessionRepository.findByUserId(userId); // ✅ korrekt
+
+			if (sessionOpt.isPresent()) {
+				String code = sessionOpt.get().getAuthorizationCode(); // ✅ korrekt
+				if (code != null && !code.isEmpty()) {
+					initializeClient(code);
+					return;
+				}
+			}
+
+			Thread.sleep(pollIntervalMillis);
+			waited += pollIntervalMillis;
+		}
+
+		throw new IllegalStateException("Timeout waiting for authorization code for user " + userId);
+	}
+
+	public synchronized void initializeClient(String authorizationCode) {
+		if (this.graphClient == null) {
+			AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
+					.clientId(clientId)
+					.tenantId(tenantId)
+					.clientSecret(clientSecret)
+					.authorizationCode(authorizationCode)
+					.redirectUrl("http://localhost:8080/callback")
+					.build();
 
 			this.graphClient = new GraphServiceClient(credential);
+		}
 	}
 
 	public GraphServiceClient getGraphClient() {
-		return graphClient;
+		if (this.graphClient == null) {
+			throw new IllegalStateException("Graph client is not initialized. Call initializeClient() with a valid token first.");
+		}
+		return this.graphClient;
 	}
 
 	public Chat createChat(String user1Id, String user2Id) {
@@ -134,14 +154,14 @@ public class MicrosoftGraphTeamsSender {
 
 		chat.setMembers(members);
 
-		return graphClient.chats().post(chat);
+		return getGraphClient().chats().post(chat);
 	}
 
 	public void sendTeamsMessage(SendTeamsMessageRequest request) {
 		Chat createdChat = createChat(request.getUser(), request.getSender());
 		ChatMessage chatMessage = createMessage(request.getMessage());
 
-		graphClient.chats()
+		getGraphClient().chats()
 				.byChatId(Objects.requireNonNull(createdChat.getId()))
 				.messages()
 				.post(chatMessage);

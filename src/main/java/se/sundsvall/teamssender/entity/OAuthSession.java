@@ -5,23 +5,38 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
+@Table(name = "oauth_sessions")
 public class OAuthSession {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false, unique = true)
 	private String userId;
+
+	@Column(length = 2048)
+	private String authorizationCode;
+
+	@Column(length = 2048)
 	private String accessToken;
+
+	@Column(length = 2048)
 	private String refreshToken;
-	private Instant expiresAt;
+
+	// --- Constructors ---
+
+	public OAuthSession() {}
+
+	public OAuthSession(String userId, String authorizationCode) {
+		this.userId = userId;
+		this.authorizationCode = authorizationCode;
+	}
+
+	// --- Getters & Setters ---
 
 	public Long getId() {
 		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public String getUserId() {
@@ -30,6 +45,14 @@ public class OAuthSession {
 
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+
+	public String getAuthorizationCode() {
+		return authorizationCode;
+	}
+
+	public void setAuthorizationCode(String authorizationCode) {
+		this.authorizationCode = authorizationCode;
 	}
 
 	public String getAccessToken() {
@@ -46,13 +69,5 @@ public class OAuthSession {
 
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
-	}
-
-	public Instant getExpiresAt() {
-		return expiresAt;
-	}
-
-	public void setExpiresAt(Instant expiresAt) {
-		this.expiresAt = expiresAt;
 	}
 }

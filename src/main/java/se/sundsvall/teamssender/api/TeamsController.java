@@ -130,8 +130,13 @@ public class TeamsController {
 	@PostMapping("/send")
 	public ResponseEntity<String> sendTeamsMessage(@RequestBody SendTeamsMessageRequest request) {
 		try {
+			// Väntar på att avsändarens token finns tillgänglig innan vi skickar
+			teamsSender.waitForAndInitializeClient(request.getSender(), 30_000, 1_000);
+
 			teamsSender.sendTeamsMessage(request);
 			return ResponseEntity.ok("Message sent successfully");
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(408).body("Authorization code not received in time: " + e.getMessage());
 		} catch (Exception e) {
 			return ResponseEntity.status(500).body("Failed to send message: " + e.getMessage());
 		}
