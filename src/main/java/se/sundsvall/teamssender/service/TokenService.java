@@ -24,6 +24,7 @@ public class TokenService {
 	@Value ("${azure.ad.client-secret}")
 	private String clientSecret;
 
+	private final OAuthSessionRepository repo;
 
 	public TokenService(OAuthSessionRepository repo) {
 		this.repo = repo;
