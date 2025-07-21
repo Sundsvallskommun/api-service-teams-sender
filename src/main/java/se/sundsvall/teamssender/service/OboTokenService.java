@@ -2,6 +2,8 @@ package se.sundsvall.teamssender.service;
 
 import com.microsoft.aad.msal4j.*;
 import jakarta.annotation.PostConstruct;
+
+import java.net.URI;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.Security;
@@ -15,6 +17,7 @@ import javax.xml.bind.DatatypeConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import se.sundsvall.teamssender.test.AzureAuthConfig;
 
 @Service
 public class OboTokenService {
@@ -36,6 +39,12 @@ public class OboTokenService {
 	private final String scope = "https://graph.microsoft.com/.default";
 
 	private final Map<String, TokenResponse> tokenCache = new ConcurrentHashMap<>();
+
+	private final AzureAuthConfig config;
+
+	public OboTokenService(AzureAuthConfig config) {
+		this.config = config;
+	}
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -134,11 +143,29 @@ public class OboTokenService {
 		return tokenResponse;
 	}
 
+	public void acquireAccessToken(String code, String codeVerifier, String userId) throws Exception {
+		System.out.println("före pca");
+		PublicClientApplication pca = PublicClientApplication.builder(config.getClientId()).build();
+		System.out.println("före authcodeparam");
+		AuthorizationCodeParameters parameters = AuthorizationCodeParameters.builder(code, new URI(config.getRedirectUri()))
+				.scopes(Collections.singleton(config.getScopes()))
+				.codeVerifier(codeVerifier).build();
+		System.out.println("före authenticationresult");
+		IAuthenticationResult authenticationResult = pca.acquireToken(parameters).join();
+		System.out.println("före tokencache");
+		TokenResponse tokenResponse = new TokenResponse();
+		tokenResponse.accessToken = authenticationResult.accessToken();
+		tokenResponse.expiresAt = System.currentTimeMillis() + (authenticationResult.expiresOnDate().getTime() - System.currentTimeMillis()) - 60000; // 1 min early
+
+		tokenCache.put(userId, tokenResponse);
+	}
+
 	/**
 	 * Get cached access token or throw if missing/expired
 	 */
 	public String getAccessTokenForUser(String userId) throws Exception {
 		TokenResponse tokenResponse = tokenCache.get(userId);
+		System.out.println(tokenResponse.accessToken);
 		if (tokenResponse == null || tokenResponse.isExpired()) {
 			throw new IllegalStateException("No valid cached token for user: " + userId);
 		}
