@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/") //Lägg till "/auth" när det är klart
 public class AuthController {
     @Value("${azure.ad.tenant-id}")
     private String tenantId;
@@ -38,7 +38,7 @@ public class AuthController {
     public void login(HttpServletResponse response) throws IOException {
 
 
-        String scopes = "User.Read Chat.ReadWrite api://<clientId>/access_as_user";
+        String scopes = "User.Read Chat.ReadWrite api://" + clientId + "/access_as_user";
 
 
         String url = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize" +
@@ -51,11 +51,11 @@ public class AuthController {
 
         response.sendRedirect(url);
     }
-    @GetMapping("/callback")
+    @GetMapping("/swagger-ui/oauth2-redirect") //Byt till "/callback" när det är klart
     public ResponseEntity<String> callback(@RequestParam String code, @RequestParam String state) {
         try {
             // Byt authorization code mot access token och refresh token
-            tokenService.exchangeAuthorizationCodeForToken(code, "http://localhost:8080/callback", userId);
+            tokenService.exchangeAuthorizationCodeForToken(code, "http://localhost:8080/swagger-ui/oauth2-redirect", userId); //Byt till "http://localhost:8080/callback" när det är klart
 
             return ResponseEntity.ok("Login succeeded, tokens saved!");
         } catch (Exception e) {
