@@ -24,6 +24,9 @@ public class OAuthSession {
 	@Column(length = 2048)
 	private String refreshToken;
 
+	@Column(nullable = false)
+	private Instant expiresAt;
+
 	// --- Constructors ---
 
 	public OAuthSession() {}
@@ -69,5 +72,11 @@ public class OAuthSession {
 
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
+	}
+	public Instant getExpiresAt() {
+		return expiresAt;
+	}
+	public void setExpiresAt(Instant expiresAt) {
+		this.expiresAt = expiresAt;
 	}
 }
