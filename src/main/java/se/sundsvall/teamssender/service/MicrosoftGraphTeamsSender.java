@@ -95,6 +95,8 @@ public class MicrosoftGraphTeamsSender {
 	@Value ("${azure.ad.client-secret}")
 	private String clientSecret;
 
+
+
 	private GraphServiceClient graphClient;
 	private final OAuthSessionRepository oAuthSessionRepository;
 

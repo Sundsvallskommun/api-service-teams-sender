@@ -108,16 +108,25 @@ public class TokenService {
 	}
 
 	public synchronized String getValidAccessToken(String userId) {
+		System.out.println("getValidAccessToken - Incoming userId: " + userId);
+
 		Optional<OAuthSession> sessionOptional = repo.findByUserId(userId);
-		if (!sessionOptional.isPresent()) {
+
+		if (sessionOptional.isEmpty()) {
+			System.out.println("getValidAccessToken - No session found for userId: " + userId);
 			throw new RuntimeException("No session for user " + userId);
 		}
+
 		OAuthSession session = sessionOptional.get();
+
+		System.out.println("getValidAccessToken - Found session: " + session);
 
 		Instant now = Instant.now();
 		if (now.isAfter(session.getExpiresAt().minusSeconds(300))) {
+			System.out.println("getValidAccessToken - Token expired or close to expiring, refreshing...");
 			refreshToken(session);
 		}
+
 		return session.getAccessToken();
 	}
 
