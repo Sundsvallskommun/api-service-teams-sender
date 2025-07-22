@@ -90,8 +90,13 @@ public class TokenService {
 				throw new RuntimeException("Failed to fetch user info: " + userInfoResponse.body());
 			}
 
+			System.out.println("User info response: " + userInfoResponse.body());
+
+
 			JsonNode userInfoJson = mapper.readTree(userInfoResponse.body());
 			String userId = userInfoJson.get("id").asText(); // alternativt "userPrincipalName"
+
+			System.out.println("User ID: " + userId);
 
 			// Steg 3: Spara eller uppdatera session
 			OAuthSession session = repo.findByUserId(userId).orElse(new OAuthSession());

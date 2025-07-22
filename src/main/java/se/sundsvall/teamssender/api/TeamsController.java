@@ -1,6 +1,5 @@
 package se.sundsvall.teamssender.api;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.models.security.Scopes;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
