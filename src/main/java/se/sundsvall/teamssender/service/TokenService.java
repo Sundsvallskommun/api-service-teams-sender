@@ -94,7 +94,7 @@ public class TokenService {
 
 
 			JsonNode userInfoJson = mapper.readTree(userInfoResponse.body());
-			String userId = userInfoJson.get("id").asText(); // alternativt "userPrincipalName"
+			String userId = userInfoJson.get("userPrincipalName").asText(); // alternativt "userPrincipalName"
 
 			System.out.println("User ID: " + userId);
 
