@@ -37,7 +37,7 @@ public class AuthController {
     public void login(HttpServletResponse response) throws IOException {
 
 
-        String scopes = "User.Read Chat.ReadWrite api://" + clientId + "/access_as_user";
+        String scopes = "offline_access User.Read Chat.ReadWrite api://" + clientId + "/access_as_user";
 
 
         String url = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize" +

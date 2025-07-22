@@ -18,10 +18,10 @@ public class OAuthSession {
 	@Column(length = 2048)
 	private String authorizationCode;
 
-	@Column(length = 2048)
+	@Column(columnDefinition = "TEXT")
 	private String accessToken;
 
-	@Column(length = 2048)
+	@Column(columnDefinition = "TEXT")
 	private String refreshToken;
 
 	@Column(nullable = false)
