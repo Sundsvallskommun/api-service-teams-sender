@@ -129,6 +129,10 @@ public class TeamsController {
 	// POST endpoint för att skicka Teams-meddelande
 	@PostMapping("/send")
 	public ResponseEntity<String> sendTeamsMessage(@RequestBody SendTeamsMessageRequest request) {
+		System.out.println("Incoming request: " + request);
+		System.out.println("user: " + request.getUser());
+		System.out.println("sender: " + request.getSender());
+		System.out.println("message: " + request.getMessage());
 		try {
 			// Väntar på att avsändarens token finns tillgänglig innan vi skickar
 			teamsSender.waitForAndInitializeClient(request.getSender(), 30_000, 1_000);
