@@ -21,9 +21,9 @@ public class AuthController {
     private String tenantId;
     @Value("${azure.ad.client-id}")
     private String clientId;
-    @Value ("${azure.ad.client-secret}")
+    @Value("${azure.ad.client-secret}")
     private String clientSecret;
-    @Value ("${azure.ad.redirecturi}")
+    @Value("${azure.ad.redirecturi}")
     private String redirectUri;
 
 
@@ -50,6 +50,7 @@ public class AuthController {
 
         response.sendRedirect(url);
     }
+
     @GetMapping("/callback") //Byt till "/callback" när det är klart
     public ResponseEntity<String> callback(@RequestParam String code, @RequestParam String state) {
         try {
@@ -61,3 +62,4 @@ public class AuthController {
             return ResponseEntity.status(500).body("Login failed: " + e.getMessage());
         }
     }
+}

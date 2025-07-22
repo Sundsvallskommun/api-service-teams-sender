@@ -12,21 +12,21 @@ public class SendTeamsMessageRequest {
 
 	@NotBlank
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
-	private String User;
+	private String user;
 
 	@NotBlank
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
-	private String Sender;
+	private String sender;
 
 	@NotBlank
 	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
-	private String Message;
+	private String message;
 
 
 
 	public SendTeamsMessageRequest(String user, String sender, String message) {
-		this.User = user;
-		this.Sender = sender;
-		this.Message = message;
+		this.user = user;
+		this.sender = sender;
+		this.message = message;
 	}
 }
