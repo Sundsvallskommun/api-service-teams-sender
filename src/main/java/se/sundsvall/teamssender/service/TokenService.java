@@ -23,16 +23,19 @@ public class TokenService {
 	private String clientId;
 	@Value ("${azure.ad.client-secret}")
 	private String clientSecret;
+	@Value("${azure.ad.redirecturi}")
+	private String redirectUri;
 
 	private final OAuthSessionRepository repo;
 
 	public TokenService(OAuthSessionRepository repo) {
 		this.repo = repo;
 	}
-	public void exchangeAuthorizationCodeForToken(String authorizationCode, String redirectUri, String userId) {
+	public void exchangeAuthorizationCodeForToken(String authorizationCode) {
 		try {
 			HttpClient client = HttpClient.newHttpClient();
 
+			// Steg 1: Byt authorization code mot tokens
 			String scopes = URLEncoder.encode("User.Read Chat.ReadWrite api://" + clientId + "/access_as_user", StandardCharsets.UTF_8);
 			String body = "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
 					+ "&scope=" + scopes
@@ -41,26 +44,45 @@ public class TokenService {
 					+ "&grant_type=authorization_code"
 					+ "&client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8);
 
-			HttpRequest request = HttpRequest.newBuilder()
+			HttpRequest tokenRequest = HttpRequest.newBuilder()
 					.uri(URI.create("https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token"))
 					.header("Content-Type", "application/x-www-form-urlencoded")
 					.POST(HttpRequest.BodyPublishers.ofString(body))
 					.build();
 
-			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-			System.out.println("Token response status: " + response.statusCode());
-			System.out.println("Token response body: " + response.body());
-			if (response.statusCode() != 200) {
-				throw new RuntimeException("Token exchange failed: " + response.body());
+			HttpResponse<String> tokenResponse = client.send(tokenRequest, HttpResponse.BodyHandlers.ofString());
+
+			System.out.println("Token response status: " + tokenResponse.statusCode());
+			System.out.println("Token response body: " + tokenResponse.body());
+
+			if (tokenResponse.statusCode() != 200) {
+				throw new RuntimeException("Token exchange failed: " + tokenResponse.body());
 			}
 
 			ObjectMapper mapper = new ObjectMapper();
-			JsonNode json = mapper.readTree(response.body());
+			JsonNode tokenJson = mapper.readTree(tokenResponse.body());
 
-			String accessToken = json.get("access_token").asText();
-			String refreshToken = json.get("refresh_token").asText();
-			int expiresIn = json.get("expires_in").asInt();
+			String accessToken = tokenJson.get("access_token").asText();
+			String refreshToken = tokenJson.get("refresh_token").asText();
+			int expiresIn = tokenJson.get("expires_in").asInt();
 
+			// Steg 2: Hämta användarinformation via Graph API
+			HttpRequest userInfoRequest = HttpRequest.newBuilder()
+					.uri(URI.create("https://graph.microsoft.com/v1.0/me"))
+					.header("Authorization", "Bearer " + accessToken)
+					.GET()
+					.build();
+
+			HttpResponse<String> userInfoResponse = client.send(userInfoRequest, HttpResponse.BodyHandlers.ofString());
+
+			if (userInfoResponse.statusCode() != 200) {
+				throw new RuntimeException("Failed to fetch user info: " + userInfoResponse.body());
+			}
+
+			JsonNode userInfoJson = mapper.readTree(userInfoResponse.body());
+			String userId = userInfoJson.get("id").asText(); // alternativt "userPrincipalName"
+
+			// Steg 3: Spara eller uppdatera session
 			OAuthSession session = repo.findByUserId(userId).orElse(new OAuthSession());
 			session.setUserId(userId);
 			session.setAccessToken(accessToken);
@@ -70,7 +92,7 @@ public class TokenService {
 			repo.save(session);
 
 		} catch (Exception e) {
-			throw new RuntimeException("Failed to exchange authorization code for tokens", e);
+			throw new RuntimeException("Failed to exchange authorization code for token", e);
 		}
 	}
 

@@ -25,8 +25,7 @@ public class AuthController {
     private String clientSecret;
     @Value ("${azure.ad.redirecturi}")
     private String redirectUri;
-    @Value ("${azure.ad.userId}")
-    private String userId;
+
 
     private final TokenService tokenService; // injecta denna via konstruktor
 
@@ -55,7 +54,7 @@ public class AuthController {
     public ResponseEntity<String> callback(@RequestParam String code, @RequestParam String state) {
         try {
             // Byt authorization code mot access token och refresh token
-            tokenService.exchangeAuthorizationCodeForToken(code, "http://localhost:8080/swagger-ui/oauth2-redirect", userId); //Byt till "http://localhost:8080/callback" när det är klart
+            tokenService.exchangeAuthorizationCodeForToken(code);
 
             return ResponseEntity.ok("Login succeeded, tokens saved!");
         } catch (Exception e) {
