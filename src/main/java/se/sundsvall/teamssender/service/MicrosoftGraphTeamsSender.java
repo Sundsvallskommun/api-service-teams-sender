@@ -108,6 +108,7 @@ public class MicrosoftGraphTeamsSender {
 	public synchronized void waitForAndInitializeClient(String userId, long maxWaitMillis, long pollIntervalMillis) throws InterruptedException {
 		long waited = 0;
 		while (waited < maxWaitMillis) {
+			System.out.println("Waiting for client " + userId);
 			Optional<OAuthSession> sessionOpt = oAuthSessionRepository.findByUserId(userId); // ✅ korrekt
 
 			if (sessionOpt.isPresent()) {
