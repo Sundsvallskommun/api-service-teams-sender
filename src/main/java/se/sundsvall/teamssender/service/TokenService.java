@@ -62,9 +62,20 @@ public class TokenService {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode tokenJson = mapper.readTree(tokenResponse.body());
 
-			String accessToken = tokenJson.get("access_token").asText();
-			String refreshToken = tokenJson.get("refresh_token").asText();
-			int expiresIn = tokenJson.get("expires_in").asInt();
+			JsonNode accessTokenNode = tokenJson.get("access_token");
+			JsonNode refreshTokenNode = tokenJson.get("refresh_token");
+			JsonNode expiresInNode = tokenJson.get("expires_in");
+
+				// Kontrollera om fälten finns
+			if (accessTokenNode == null || refreshTokenNode == null || expiresInNode == null) {
+				System.err.println("Token response saknar ett eller flera obligatoriska fält: " + tokenResponse.body());
+				throw new RuntimeException("Token-svaret saknar access_token, refresh_token eller expires_in");
+			}
+
+			String accessToken = accessTokenNode.asText();
+			String refreshToken = refreshTokenNode.asText();
+			int expiresIn = expiresInNode.asInt();
+
 
 			// Steg 2: Hämta användarinformation via Graph API
 			HttpRequest userInfoRequest = HttpRequest.newBuilder()

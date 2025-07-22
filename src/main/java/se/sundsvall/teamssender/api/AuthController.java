@@ -50,7 +50,7 @@ public class AuthController {
 
         response.sendRedirect(url);
     }
-    @GetMapping("/swagger-ui/oauth2-redirect") //Byt till "/callback" när det är klart
+    @GetMapping("/callback") //Byt till "/callback" när det är klart
     public ResponseEntity<String> callback(@RequestParam String code, @RequestParam String state) {
         try {
             // Byt authorization code mot access token och refresh token
@@ -61,4 +61,3 @@ public class AuthController {
             return ResponseEntity.status(500).body("Login failed: " + e.getMessage());
         }
     }
-}
