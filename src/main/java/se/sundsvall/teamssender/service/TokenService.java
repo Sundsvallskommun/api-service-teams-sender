@@ -133,6 +133,7 @@ public class TokenService {
 	private void refreshToken(OAuthSession session) {
 		try {
 			HttpClient client = HttpClient.newHttpClient();
+			System.out.println("refreshToken - Refreshing for userId: " + session.getUserId());
 
 			String scopes = URLEncoder.encode("User.Read Chat.ReadWrite api://" + clientId + "/access_as_user", StandardCharsets.UTF_8);
 			String body = "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
@@ -149,6 +150,9 @@ public class TokenService {
 
 			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+			System.out.println("refreshToken - Response code: " + response.statusCode());
+			System.out.println("refreshToken - Response body: " + response.body());
+
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode json = mapper.readTree(response.body());
 
@@ -161,6 +165,9 @@ public class TokenService {
 			session.setExpiresAt(Instant.now().plusSeconds(expiresIn));
 
 			repo.save(session);
+
+			System.out.println("refreshToken - Token refresh succeeded for userId: " + session.getUserId());
+
 
 		} catch (Exception e) {
 			throw new RuntimeException("Could not refresh token", e);
