@@ -48,7 +48,8 @@ public class TokenService {
 					.build();
 
 			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
+			System.out.println("Token response status: " + response.statusCode());
+			System.out.println("Token response body: " + response.body());
 			if (response.statusCode() != 200) {
 				throw new RuntimeException("Token exchange failed: " + response.body());
 			}
