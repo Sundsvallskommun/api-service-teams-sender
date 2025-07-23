@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.test;
+package se.sundsvall.teamssender.test.service;
 
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
@@ -6,14 +6,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GraphService {
 
-	public void sendTeamsMessage(GraphServiceClient graphClient, String recipientEmail, String message) {
-		String user = "maria.wiklund@sundsvall.se";
-		var createdChat = createChat(graphClient, user, recipientEmail);
+	public void sendTeamsMessage(GraphServiceClient graphClient, String systemUser, String recipientEmail, String message) {
+		var createdChat = createChat(graphClient, systemUser, recipientEmail);
 		var chatMessage = createMessage(message);
 
 		graphClient.chats()
