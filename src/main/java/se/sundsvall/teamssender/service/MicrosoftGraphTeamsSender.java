@@ -1,5 +1,6 @@
 package se.sundsvall.teamssender.service;
 
+import com.azure.core.credential.TokenCredential;
 import com.azure.identity.AuthorizationCodeCredential;
 import com.azure.identity.AuthorizationCodeCredentialBuilder;
 import com.microsoft.graph.models.*;
@@ -10,6 +11,7 @@ import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.entity.OAuthSession;
 import se.sundsvall.teamssender.repository.OAuthSessionRepository;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.List;
 
@@ -108,13 +110,13 @@ public class MicrosoftGraphTeamsSender {
 	public synchronized void waitForAndInitializeClient(String userId, long maxWaitMillis, long pollIntervalMillis) throws InterruptedException {
 		long waited = 0;
 		while (waited < maxWaitMillis) {
-			System.out.println("Waiting for client " + userId);
-			Optional<OAuthSession> sessionOpt = oAuthSessionRepository.findByUserId(userId); // ✅ korrekt
+			System.out.println("Waiting for access token for " + userId);
+			Optional<OAuthSession> sessionOpt = oAuthSessionRepository.findByUserId(userId);
 
 			if (sessionOpt.isPresent()) {
-				String code = sessionOpt.get().getAuthorizationCode(); // ✅ korrekt
-				if (code != null && !code.isEmpty()) {
-					initializeClient(code);
+				String accessToken = sessionOpt.get().getAccessToken();
+				if (accessToken != null && !accessToken.isEmpty()) {
+					initializeClientWithAccessToken(accessToken); // 🟢
 					return;
 				}
 			}
@@ -123,7 +125,7 @@ public class MicrosoftGraphTeamsSender {
 			waited += pollIntervalMillis;
 		}
 
-		throw new IllegalStateException("Timeout waiting for authorization code for user " + userId);
+		throw new IllegalStateException("Timeout waiting for access token for user " + userId);
 	}
 
 	public synchronized void initializeClient(String authorizationCode) {
@@ -191,5 +193,12 @@ public class MicrosoftGraphTeamsSender {
 		member.setAdditionalData(additionalData);
 
 		return member;
+	}
+
+
+	private void initializeClientWithAccessToken(String accessToken) {
+		TokenCredential authProvider = new SimpleAuthProvider(accessToken);
+		this.graphClient = new GraphServiceClient(authProvider);
+
 	}
 }
