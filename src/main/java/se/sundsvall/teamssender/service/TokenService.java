@@ -101,7 +101,7 @@ public class TokenService {
 			System.out.println("User ID: " + userId);
 
 			// Steg 3: Spara eller uppdatera session
-			OAuthSession session = repo.findByUserId(userId).orElse(new OAuthSession(userId, authorizationCode));
+			OAuthSession session = repo.findByUserIdIgnoreCase(userId).orElse(new OAuthSession(userId, authorizationCode));
 			session.setAccessToken(accessToken);
 			session.setRefreshToken(refreshToken);
 			session.setExpiresAt(Instant.now().plusSeconds(expiresIn));
@@ -116,7 +116,7 @@ public class TokenService {
 	public synchronized String getValidAccessToken(String userId) {
 		System.out.println("getValidAccessToken - Incoming userId: " + userId);
 
-		Optional<OAuthSession> sessionOptional = repo.findByUserId(userId);
+		Optional<OAuthSession> sessionOptional = repo.findByUserIdIgnoreCase(userId);
 
 		if (sessionOptional.isEmpty()) {
 			System.out.println("getValidAccessToken - No session found for userId: " + userId);
