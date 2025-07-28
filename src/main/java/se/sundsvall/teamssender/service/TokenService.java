@@ -141,7 +141,7 @@ public class TokenService {
 			HttpClient client = HttpClient.newHttpClient();
 			System.out.println("refreshToken - Refreshing for userId: " + session.getUserId());
 
-			String scopes = URLEncoder.encode("Offline User.Read Chat.ReadWrite api://" + clientId + "/access_as_user", StandardCharsets.UTF_8);
+			String scopes = URLEncoder.encode("Offline_access User.Read Chat.ReadWrite api://" + clientId + "/access_as_user", StandardCharsets.UTF_8);
 			String body = "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
 				+ "&scope=" + scopes
 				+ "&refresh_token=" + URLEncoder.encode(session.getRefreshToken(), StandardCharsets.UTF_8)
