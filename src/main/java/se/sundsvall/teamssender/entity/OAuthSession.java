@@ -9,9 +9,6 @@ import java.time.Instant;
 public class OAuthSession {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-
 	@Column(nullable = false, unique = true)
 	private String userId;
 
@@ -37,10 +34,6 @@ public class OAuthSession {
 	}
 
 	// --- Getters & Setters ---
-
-	public Long getId() {
-		return id;
-	}
 
 	public String getUserId() {
 		return userId;

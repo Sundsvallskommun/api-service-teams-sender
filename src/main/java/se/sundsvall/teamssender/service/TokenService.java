@@ -99,8 +99,7 @@ public class TokenService {
 			System.out.println("User ID: " + userId);
 
 			// Steg 3: Spara eller uppdatera session
-			OAuthSession session = repo.findByUserId(userId).orElse(new OAuthSession());
-			session.setUserId(userId);
+			OAuthSession session = repo.findByUserId(userId).orElse(new OAuthSession(userId, authorizationCode));
 			session.setAccessToken(accessToken);
 			session.setRefreshToken(refreshToken);
 			session.setExpiresAt(Instant.now().plusSeconds(expiresIn));
@@ -170,6 +169,7 @@ public class TokenService {
 			session.setExpiresAt(Instant.now().plusSeconds(expiresIn));
 
 			repo.save(session);
+			System.out.println("refreshToken - Session saved: " + session);
 
 			System.out.println("refreshToken - Token refresh succeeded for userId: " + session.getUserId());
 
