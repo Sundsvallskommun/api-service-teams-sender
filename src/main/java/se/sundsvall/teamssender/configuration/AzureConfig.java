@@ -7,7 +7,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "azure.ad")
-@Getter @Setter
+@Getter
+@Setter
 public class AzureConfig {
 	private String clientId;
 	private String tenantId;
