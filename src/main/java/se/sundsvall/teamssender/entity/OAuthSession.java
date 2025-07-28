@@ -26,11 +26,20 @@ public class OAuthSession {
 
 	// --- Constructors ---
 
+
 	public OAuthSession() {}
 
 	public OAuthSession(String userId, String authorizationCode) {
 		this.userId = userId;
 		this.authorizationCode = authorizationCode;
+	}
+
+	@PrePersist
+	@PreUpdate
+	private void normalizeUserId() {
+		if (this.userId != null) {
+			this.userId = this.userId.toLowerCase();
+		}
 	}
 
 	// --- Getters & Setters ---
