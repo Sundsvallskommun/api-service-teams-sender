@@ -2,15 +2,13 @@ package se.sundsvall.teamssender.auth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import se.sundsvall.teamssender.configuration.AzureConfig;
 import se.sundsvall.teamssender.auth.service.TokenService;
+import se.sundsvall.teamssender.configuration.AzureConfig;
 
 @RestController
 public class AuthResource {
@@ -35,10 +33,8 @@ public class AuthResource {
 		response.sendRedirect(authorizeUrl);
 	}
 
-	@GetMapping("/swagger-ui/oauth2-redirect.html") //ändra till callback (även i application.properties)
+	@GetMapping("/swagger-ui/oauth2-redirect.html") // ändra till callback (även i application.properties)
 	public ResponseEntity<String> callback(HttpServletRequest request) throws Exception {
 		return tokenService.exchangeAuthCodeForToken(request.getParameter("code"));
 	}
 }
-
-
