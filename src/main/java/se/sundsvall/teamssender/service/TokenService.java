@@ -11,10 +11,12 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.teamssender.entity.OAuthSession;
 import se.sundsvall.teamssender.repository.OAuthSessionRepository;
 
 @Service
+@Transactional
 public class TokenService {
 
 	@Value("${azure.ad.tenant-id}")
