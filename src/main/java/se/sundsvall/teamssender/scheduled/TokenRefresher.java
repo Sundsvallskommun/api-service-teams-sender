@@ -19,6 +19,7 @@ public class TokenRefresher {
 
 	@Scheduled(fixedDelay = 60000)
 	public void proactiveRefresh() {
+		System.out.println("Proactive Refresh");
 		repo.findAll().forEach(session -> {
 			if (Instant.now().isAfter(session.getExpiresAt().minusSeconds(300))) {
 				tokenService.getValidAccessToken(session.getUserId());
