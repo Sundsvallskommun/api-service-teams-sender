@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.service;
+package se.sundsvall.teamssender.auth.service;
 
 import java.io.FileReader;
 import java.io.Reader;
