@@ -38,7 +38,7 @@ public class TokenService {
 			HttpClient client = HttpClient.newHttpClient();
 
 			// Steg 1: Byt authorization code mot tokens
-			String scopes = URLEncoder.encode("User.Read Chat.ReadWrite api://" + clientId + "/access_as_user", StandardCharsets.UTF_8);
+			String scopes = URLEncoder.encode("Offline_access User.Read Chat.ReadWrite api://" + clientId + "/access_as_user", StandardCharsets.UTF_8);
 			String body = "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
 					+ "&scope=" + scopes
 					+ "&code=" + URLEncoder.encode(authorizationCode, StandardCharsets.UTF_8)
