@@ -18,16 +18,6 @@ import java.util.List;
 
 @Service
 public class MicrosoftGraphTeamsSender {
-	@Value("${azure.ad.tenant-id}")
-	private String tenantId;
-
-	@Value("${azure.ad.client-id}")
-	private String clientId;
-
-	@Value ("${azure.ad.client-secret}")
-	private String clientSecret;
-
-
 
 	private GraphServiceClient graphClient;
 	private final OAuthSessionRepository oAuthSessionRepository;
@@ -50,11 +40,17 @@ public class MicrosoftGraphTeamsSender {
 				OAuthSession session = sessionOpt.get();
 				String accessToken = session.getAccessToken();
 				System.out.println("AccessToken found: '" + accessToken + "'");
-				if (Instant.now().isAfter(session.getExpiresAt().minusSeconds(300))) {
-					accessToken = tokenService.getValidAccessToken(userId);
+
 					if (accessToken != null && !accessToken.isEmpty()) {
+						if (Instant.now().isAfter(session.getExpiresAt().minusSeconds(300))) {
+							System.out.println("Access token is expired or about to expire. Refreshing...");
+							accessToken = tokenService.getValidAccessToken(userId); // detta returnerar ny token
+						} else {
+							System.out.println("Access token is still valid.");
+						}
 						System.out.println("Initializing client with access token.");
 						initializeClientWithAccessToken(accessToken); // 🟢
+
 						return;
 					} else {
 						System.out.println("Access token is null or empty.");
@@ -62,27 +58,13 @@ public class MicrosoftGraphTeamsSender {
 				} else {
 					System.out.println("No OAuth session found for user.");
 				}
-			}
+
 
 			Thread.sleep(pollIntervalMillis);
 			waited += pollIntervalMillis;
 		}
 
 		throw new IllegalStateException("Timeout waiting for access token for user " + userId);
-	}
-
-	public synchronized void initializeClient(String authorizationCode) {
-		if (this.graphClient == null) {
-			AuthorizationCodeCredential credential = new AuthorizationCodeCredentialBuilder()
-					.clientId(clientId)
-					.tenantId(tenantId)
-					.clientSecret(clientSecret)
-					.authorizationCode(authorizationCode)
-					.redirectUrl("http://localhost:8080/callback")
-					.build();
-
-			this.graphClient = new GraphServiceClient(credential);
-		}
 	}
 
 	public GraphServiceClient getGraphClient() {
