@@ -11,6 +11,7 @@ import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.entity.OAuthSession;
 import se.sundsvall.teamssender.repository.OAuthSessionRepository;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.List;
 
@@ -30,10 +31,13 @@ public class MicrosoftGraphTeamsSender {
 
 	private GraphServiceClient graphClient;
 	private final OAuthSessionRepository oAuthSessionRepository;
+	private final TokenService tokenService;
 
-	public MicrosoftGraphTeamsSender(OAuthSessionRepository oAuthSessionRepository) {
+	public MicrosoftGraphTeamsSender(OAuthSessionRepository oAuthSessionRepository, TokenService tokenService) {
 		this.oAuthSessionRepository = oAuthSessionRepository;
+		this.tokenService = tokenService;
 	}
+
 
 	// Väntar på token i upp till maxWaitMillis, pollar var pollIntervalMillis
 	public synchronized void waitForAndInitializeClient(String userId, long maxWaitMillis, long pollIntervalMillis) throws InterruptedException {
@@ -43,18 +47,21 @@ public class MicrosoftGraphTeamsSender {
 			Optional<OAuthSession> sessionOpt = oAuthSessionRepository.findByUserIdIgnoreCase(userId);
 
 			if (sessionOpt.isPresent()) {
-				String accessToken = sessionOpt.get().getAccessToken();
+				OAuthSession session = sessionOpt.get();
+				String accessToken = session.getAccessToken();
 				System.out.println("AccessToken found: '" + accessToken + "'");
-
-				if (accessToken != null && !accessToken.isEmpty()) {
-					System.out.println("Initializing client with access token.");
-					initializeClientWithAccessToken(accessToken); // 🟢
-					return;
+				if (Instant.now().isAfter(session.getExpiresAt().minusSeconds(300))) {
+					accessToken = tokenService.getValidAccessToken(userId);
+					if (accessToken != null && !accessToken.isEmpty()) {
+						System.out.println("Initializing client with access token.");
+						initializeClientWithAccessToken(accessToken); // 🟢
+						return;
+					} else {
+						System.out.println("Access token is null or empty.");
+					}
 				} else {
-					System.out.println("Access token is null or empty.");
+					System.out.println("No OAuth session found for user.");
 				}
-			} else {
-				System.out.println("No OAuth session found for user.");
 			}
 
 			Thread.sleep(pollIntervalMillis);
