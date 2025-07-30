@@ -1,7 +1,6 @@
 package se.sundsvall.teamssender.auth.repository;
 
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import se.sundsvall.teamssender.auth.model.TokenCacheEntity;
 
@@ -10,7 +9,6 @@ public class TokenCacheRepository implements ITokenCacheRepository {
 
 	private final TokenCacheJpaRepository tokenCacheJpaRepository;
 
-	@Autowired
 	public TokenCacheRepository(TokenCacheJpaRepository tokenCacheJpaRepository) {
 		this.tokenCacheJpaRepository = tokenCacheJpaRepository;
 	}
