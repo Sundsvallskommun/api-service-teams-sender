@@ -15,7 +15,7 @@ import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
 @RestController
-public class TeamsSenderResource {
+class TeamsSenderResource {
 
 	private final TeamsSenderService teamsSenderService;
 
@@ -36,7 +36,7 @@ public class TeamsSenderResource {
 			@ApiResponse(responseCode = "503", description = "Connection issue to Microsoft Graph API", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(schema = @Schema(implementation = Problem.class)))
 		})
-	public ResponseEntity<String> sendTeamsMessage(@RequestBody SendTeamsMessageRequest request) throws Exception {
+	ResponseEntity<String> sendTeamsMessage(@RequestBody SendTeamsMessageRequest request) throws Exception {
 
 		teamsSenderService.sendTeamsMessage(request);
 

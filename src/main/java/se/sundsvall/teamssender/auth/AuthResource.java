@@ -11,7 +11,7 @@ import se.sundsvall.teamssender.auth.service.TokenService;
 import se.sundsvall.teamssender.configuration.AzureConfig;
 
 @RestController
-public class AuthResource {
+class AuthResource {
 
 	private final AzureConfig config;
 	private final TokenService tokenService;
@@ -22,7 +22,7 @@ public class AuthResource {
 	}
 
 	@GetMapping("/login")
-	public void login(HttpServletResponse response) throws Exception {
+	void login(HttpServletResponse response) throws Exception {
 		String authorizeUrl = String.format(
 			"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=code&redirect_uri=%s&response_mode=query&scope=%s",
 			config.getTenantId(),
@@ -34,7 +34,7 @@ public class AuthResource {
 	}
 
 	@GetMapping("/swagger-ui/oauth2-redirect.html") // ändra till callback (även i application.properties)
-	public ResponseEntity<String> callback(HttpServletRequest request) throws Exception {
+	ResponseEntity<String> callback(HttpServletRequest request) throws Exception {
 		return tokenService.exchangeAuthCodeForToken(request.getParameter("code"));
 	}
 }

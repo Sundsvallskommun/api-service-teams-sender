@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,6 @@ public class TokenService {
 	@Value("${teams.sender}")
 	private String systemUser;
 
-	@Autowired
 	public TokenService(AzureConfig config, TokenCacheRepository tokenCacheRepository) {
 		this.config = config;
 		this.tokenCacheRepository = tokenCacheRepository;
