@@ -1,11 +1,8 @@
 package se.sundsvall.teamssender.service;
 
 import com.azure.core.credential.TokenCredential;
-import com.azure.identity.AuthorizationCodeCredential;
-import com.azure.identity.AuthorizationCodeCredentialBuilder;
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.entity.OAuthSession;
