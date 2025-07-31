@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
+import se.sundsvall.teamssender.api.model.SendTeamsMessageResponse;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
 @RestController
@@ -26,7 +27,9 @@ class TeamsSenderResource {
 	@PostMapping("/teams/messages")
 	@Operation(summary = "Send a message in Microsoft Teams",
 		responses = {
-			@ApiResponse(responseCode = "200", description = "Message sent successfully", useReturnTypeSchema = true),
+			@ApiResponse(responseCode = "200",
+				description = "Message sent successfully",
+				content = @Content(schema = @Schema(implementation = SendTeamsMessageResponse.class))),
 			@ApiResponse(responseCode = "400", description = "Incorrect or malformed request", content = @Content(schema = @Schema(oneOf = {
 				Problem.class, ConstraintViolationProblem.class
 			}))),
@@ -36,10 +39,10 @@ class TeamsSenderResource {
 			@ApiResponse(responseCode = "503", description = "Connection issue to Microsoft Graph API", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(schema = @Schema(implementation = Problem.class)))
 		})
-	ResponseEntity<String> sendTeamsMessage(@RequestBody SendTeamsMessageRequest request) throws Exception {
+	ResponseEntity<SendTeamsMessageResponse> sendTeamsMessage(@RequestBody @Valid SendTeamsMessageRequest request) throws Exception {
 
 		teamsSenderService.sendTeamsMessage(request);
 
-		return ResponseEntity.status(HttpStatus.CREATED).body("Message sent");
+		return ResponseEntity.ok(new SendTeamsMessageResponse("Message sent successfully"));
 	}
 }

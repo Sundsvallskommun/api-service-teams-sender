@@ -33,7 +33,7 @@ class AuthResource {
 		response.sendRedirect(authorizeUrl);
 	}
 
-	@GetMapping("/swagger-ui/oauth2-redirect.html") // ändra till callback (även i application.properties)
+	@GetMapping("/swagger-ui/oauth2-redirect.html")
 	ResponseEntity<String> callback(HttpServletRequest request) throws Exception {
 		return tokenService.exchangeAuthCodeForToken(request.getParameter("code"));
 	}

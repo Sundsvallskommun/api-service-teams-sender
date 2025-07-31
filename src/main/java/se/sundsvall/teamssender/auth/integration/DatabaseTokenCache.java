@@ -3,7 +3,6 @@ package se.sundsvall.teamssender.auth.integration;
 import com.microsoft.aad.msal4j.ITokenCacheAccessAspect;
 import com.microsoft.aad.msal4j.ITokenCacheAccessContext;
 import java.nio.charset.StandardCharsets;
-
 import se.sundsvall.teamssender.auth.model.TokenCacheEntity;
 import se.sundsvall.teamssender.auth.repository.ITokenCacheRepository;
 
@@ -20,11 +19,11 @@ public class DatabaseTokenCache implements ITokenCacheAccessAspect {
 	@Override
 	public void beforeCacheAccess(ITokenCacheAccessContext context) {
 		tokenCacheRepository.findById(userId)
-				.map(TokenCacheEntity::getCacheData)
-				.ifPresent(cacheData -> {
-					String cacheString = new String(cacheData, StandardCharsets.UTF_8);
-					context.tokenCache().deserialize(cacheString);
-				});
+			.map(TokenCacheEntity::getCacheData)
+			.ifPresent(cacheData -> {
+				String cacheString = new String(cacheData, StandardCharsets.UTF_8);
+				context.tokenCache().deserialize(cacheString);
+			});
 	}
 
 	@Override
