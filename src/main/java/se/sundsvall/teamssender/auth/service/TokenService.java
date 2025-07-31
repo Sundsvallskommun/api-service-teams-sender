@@ -12,12 +12,13 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import se.sundsvall.teamssender.auth.pojo.DatabaseTokenCache;
-import se.sundsvall.teamssender.auth.pojo.StaticTokenCredential;
-import se.sundsvall.teamssender.auth.repository.TokenCacheRepository;
+import se.sundsvall.teamssender.auth.integration.DatabaseTokenCache;
+import se.sundsvall.teamssender.auth.integration.StaticTokenCredential;
+import se.sundsvall.teamssender.auth.repository.ITokenCacheRepository;
 import se.sundsvall.teamssender.configuration.AzureConfig;
 
 @Service
@@ -25,14 +26,15 @@ public class TokenService {
 
 	private final AzureConfig config;
 
-	private final TokenCacheRepository tokenCacheRepository;
+	private final ITokenCacheRepository tokenCacheRepository;
 
 	private CertificateAndKey certificateAndKey;
 
 	@Value("${teams.sender}")
 	private String systemUser;
 
-	public TokenService(AzureConfig config, TokenCacheRepository tokenCacheRepository) {
+	@Autowired
+	public TokenService(AzureConfig config, ITokenCacheRepository tokenCacheRepository) {
 		this.config = config;
 		this.tokenCacheRepository = tokenCacheRepository;
 	}
