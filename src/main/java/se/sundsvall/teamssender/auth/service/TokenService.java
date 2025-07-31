@@ -72,7 +72,6 @@ public class TokenService {
 			.build();
 
 		IAuthenticationResult result = app.acquireToken(parameters).get();
-		String userId = result.account().username(); // Kan nog tas bort
 
 		ConfidentialClientApplication cachedApp = ConfidentialClientApplication.builder(config.getClientId(), ClientCredentialFactory.createFromCertificate(certificateAndKey.privateKey, certificateAndKey.certificate))
 			.authority(config.getAuthorityUrl())
