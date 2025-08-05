@@ -26,7 +26,7 @@ class TeamsSenderResource {
 	@PostMapping("/teams/messages")
 	@Operation(summary = "Send a message in Microsoft Teams",
 		responses = {
-			@ApiResponse(responseCode = "200", description = "Message sent successfully", useReturnTypeSchema = true),
+			@ApiResponse(responseCode = "204", description = "Message sent successfully", useReturnTypeSchema = true),
 			@ApiResponse(responseCode = "400", description = "Incorrect or malformed request", content = @Content(schema = @Schema(oneOf = {
 				Problem.class, ConstraintViolationProblem.class
 			}))),
