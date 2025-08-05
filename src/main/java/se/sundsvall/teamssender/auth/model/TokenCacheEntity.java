@@ -1,6 +1,10 @@
 package se.sundsvall.teamssender.auth.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +17,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class TokenCacheEntity {
 
 	@Id
-	@Column(name = "user_id", nullable = false, length = 255)
+	@Column(name = "user_id", nullable = false)
 	private String userId;
 	@Lob
 	@Column(name = "cache_data", nullable = false, columnDefinition = "LONGBLOB")

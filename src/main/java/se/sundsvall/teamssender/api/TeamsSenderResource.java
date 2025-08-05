@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
-import se.sundsvall.teamssender.api.model.SendTeamsMessageResponse;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
 @RestController
@@ -37,10 +36,10 @@ class TeamsSenderResource {
 			@ApiResponse(responseCode = "503", description = "Connection issue to Microsoft Graph API", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(schema = @Schema(implementation = Problem.class)))
 		})
-	ResponseEntity<SendTeamsMessageResponse> sendTeamsMessage(@RequestBody @Valid SendTeamsMessageRequest request) throws Exception {
+	ResponseEntity<Void> sendTeamsMessage(@RequestBody @Valid SendTeamsMessageRequest request) throws Exception {
 
 		teamsSenderService.sendTeamsMessage(request);
 
-		return ResponseEntity.ok(new SendTeamsMessageResponse("Message sent successfully"));
+		return ResponseEntity.noContent().build();
 	}
 }
