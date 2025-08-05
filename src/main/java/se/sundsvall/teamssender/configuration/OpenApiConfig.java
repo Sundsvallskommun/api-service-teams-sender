@@ -19,7 +19,7 @@ public class OpenApiConfig {
 
 	@Primary
 	@Bean
-	public OpenAPI customizeOpenAPI() {
+	OpenAPI customizeOpenAPI() {
 
 		Scopes scopes = new Scopes()
 			.addString("api://" + clientId + "/access_as_user", "Access my API")

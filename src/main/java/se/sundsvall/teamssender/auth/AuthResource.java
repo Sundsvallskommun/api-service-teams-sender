@@ -16,7 +16,7 @@ class AuthResource {
 	private final AzureConfig config;
 	private final TokenService tokenService;
 
-	public AuthResource(AzureConfig config, TokenService tokenService) {
+	AuthResource(AzureConfig config, TokenService tokenService) {
 		this.config = config;
 		this.tokenService = tokenService;
 	}

@@ -55,6 +55,4 @@ hs_err_pid*
 application-default.*
 
 /src/main/resources/application.properties
-/src/main/resources/openapi.yml
-/src/main/resources/cert/
-/src/main/resources/truststore/
+/src/main/resources/cert/teamssender.key
