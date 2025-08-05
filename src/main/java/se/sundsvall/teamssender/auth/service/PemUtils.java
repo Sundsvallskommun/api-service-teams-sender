@@ -19,10 +19,10 @@ public class PemUtils {
 			Object object = pemParser.readObject();
 			JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
 
-			if (object instanceof PEMKeyPair) {
-				return converter.getPrivateKey(((PEMKeyPair) object).getPrivateKeyInfo());
-			} else if (object instanceof PrivateKeyInfo) {
-				return converter.getPrivateKey((PrivateKeyInfo) object);
+			if (object instanceof PEMKeyPair pemKey) {
+				return converter.getPrivateKey(pemKey.getPrivateKeyInfo());
+			} else if (object instanceof PrivateKeyInfo privateKeyInfo) {
+				return converter.getPrivateKey(privateKeyInfo);
 			} else if (object instanceof PEMEncryptedKeyPair) {
 				throw new UnsupportedOperationException("Krypterade PEM-nycklar stöds inte i detta exempel");
 			} else {

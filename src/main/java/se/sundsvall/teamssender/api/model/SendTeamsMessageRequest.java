@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 public class SendTeamsMessageRequest {
 
 	@NotBlank
-	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com", required = true)
+	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com")
 	private String recipient;
 
 	@NotBlank
-	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM", required = true)
+	@Schema(description = "The content of the message", example = "Don't forget the meeting at 3 PM")
 	private String message;
 
 	public SendTeamsMessageRequest(String recipient, String message) {

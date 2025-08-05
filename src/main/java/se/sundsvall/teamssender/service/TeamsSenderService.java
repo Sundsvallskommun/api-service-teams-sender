@@ -28,8 +28,8 @@ public class TeamsSenderService {
 	public void sendTeamsMessage(SendTeamsMessageRequest request) throws Exception {
 		GraphServiceClient graphClient = tokenService.initializeGraphServiceClient();
 
-		var createdChat = createChat(graphClient, systemUser, request.getRecipient());
-		var chatMessage = createMessage(request.getMessage());
+		Chat createdChat = createChat(graphClient, systemUser, request.getRecipient());
+		ChatMessage chatMessage = createMessage(request.getMessage());
 
 		graphClient.chats()
 			.byChatId(Objects.requireNonNull(createdChat.getId()))
