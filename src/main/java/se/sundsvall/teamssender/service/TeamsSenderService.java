@@ -62,8 +62,8 @@ public class TeamsSenderService {
 		member.setRoles(List.of("owner"));
 
 		HashMap<String, Object> additionalData = new HashMap<>();
-        assert user != null;
-        additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + user.getId() + "')");
+		assert user != null;
+		additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + user.getId() + "')");
 		member.setAdditionalData(additionalData);
 
 		return member;

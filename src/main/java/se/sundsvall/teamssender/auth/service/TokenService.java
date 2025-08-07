@@ -51,7 +51,6 @@ public class TokenService {
 
 		app.acquireTokenSilently(silentParameters).get();
 
-
 		return ResponseEntity.ok("Token successfully saved");
 	}
 
