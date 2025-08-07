@@ -12,18 +12,6 @@ spring:
   application:
     name: teamssender
 azure:
-#  ad:
-#    2281:
-#      tenant-id: "${CI_TENANT_ID}"
-#      client-id: "${CI_CLIENT_ID}"
-#      clientSecret: "${CI_CLIENT_SECRET}"
-#      redirect-uri: "http://localhost:8080/callback"
-#      user: "${CI_USER}"
-#      scopes: "User.Read Chat.ReadWrite Chat.Create offline_access"
-#      authority-url: "${CI_AUTHORITY_URL}"
   ad:
     2281:
 
-vcap:
-  application:
-    application-id:

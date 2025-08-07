@@ -3,14 +3,11 @@ package se.sundsvall.teamssender.auth.service;
 import com.azure.core.credential.TokenCredential;
 import com.microsoft.aad.msal4j.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-
 import java.net.URI;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.auth.integration.DatabaseTokenCache;
@@ -25,11 +22,6 @@ public class TokenService {
 
 	private final ITokenCacheRepository tokenCacheRepository;
 
-//	private CertificateAndKey certificateAndKey;
-
-	@Value("${teams.sender}")
-	private String systemUser;
-
 	@Autowired
 	public TokenService(AzureMultiConfig azureMultiConfig, ITokenCacheRepository tokenCacheRepository) {
 		this.multiConfig = azureMultiConfig;
@@ -37,53 +29,47 @@ public class TokenService {
 	}
 
 	public ResponseEntity<String> exchangeAuthCodeForToken(String authCode, String municipalityId) throws Exception {
-		AzureMultiConfig.AzureConfig config = multiConfig.getAd().get(municipalityId);
-		if (config == null) {
-			throw new IllegalArgumentException("No Azure config found for municipalityId: " + municipalityId);
-		}
+		AzureMultiConfig.AzureConfig config = getAzureConfig(municipalityId);
 
 		IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
 
 		ConfidentialClientApplication app = ConfidentialClientApplication.builder(config.getClientId(), clientSecret)
-				.authority(config.getAuthorityUrl())
-				.setTokenCacheAccessAspect(new DatabaseTokenCache(systemUser, tokenCacheRepository))
-				.build();
+			.authority(config.getAuthorityUrl())
+			.setTokenCacheAccessAspect(new DatabaseTokenCache(config.getUser(), tokenCacheRepository))
+			.build();
 
 		AuthorizationCodeParameters parameters = AuthorizationCodeParameters
-				.builder(authCode, new URI(config.getRedirectUri()))
-				.scopes(Collections.singleton(config.getScopes()))
-				.build();
+			.builder(authCode, new URI(config.getRedirectUri()))
+			.scopes(Collections.singleton(config.getScopes()))
+			.build();
 
 		IAuthenticationResult result = app.acquireToken(parameters).get();
 
 		SilentParameters silentParameters = SilentParameters.builder(Collections.singleton(config.getScopes()))
-				.account(result.account())
-				.build();
+			.account(result.account())
+			.build();
 
 		app.acquireTokenSilently(silentParameters).get();
 
 		return ResponseEntity.ok("Token successfully saved");
 	}
 
-	public String getAccessTokenForUser(String sender, String municipalityId) throws Exception {
-		AzureMultiConfig.AzureConfig config = multiConfig.getAd().get(municipalityId);
-		if (config == null) {
-			throw new IllegalArgumentException("No Azure config found for municipalityId: " + municipalityId);
-		}
+	public String getAccessTokenForUser(String municipalityId) throws Exception {
+		AzureMultiConfig.AzureConfig config = getAzureConfig(municipalityId);
 
 		IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
 
 		ConfidentialClientApplication confApp = ConfidentialClientApplication.builder(config.getClientId(), clientSecret)
-				.authority(config.getAuthorityUrl())
-				.setTokenCacheAccessAspect(new DatabaseTokenCache(sender, tokenCacheRepository))
-				.build();
+			.authority(config.getAuthorityUrl())
+			.setTokenCacheAccessAspect(new DatabaseTokenCache(config.getUser(), tokenCacheRepository))
+			.build();
 
 		Set<IAccount> accounts = confApp.getAccounts().join();
-		Optional<IAccount> account = accounts.stream().filter(a -> a.username().equals(sender)).findFirst();
+		Optional<IAccount> account = accounts.stream().filter(a -> a.username().equals(config.getUser())).findFirst();
 
 		SilentParameters silentParameters = SilentParameters.builder(Collections.singleton(config.getScopes()))
-				.account(account.orElse(null))
-				.build();
+			.account(account.orElse(null))
+			.build();
 
 		IAuthenticationResult result = confApp.acquireTokenSilently(silentParameters).get();
 
@@ -91,9 +77,20 @@ public class TokenService {
 	}
 
 	public GraphServiceClient initializeGraphServiceClient(String municipalityId) throws Exception {
-		String accessToken = getAccessTokenForUser(municipalityId, systemUser);
+		String accessToken = getAccessTokenForUser(municipalityId);
 		TokenCredential credential = new StaticTokenCredential(accessToken);
 
 		return new GraphServiceClient(credential);
 	}
+
+	private AzureMultiConfig.AzureConfig getAzureConfig(String municipalityId) {
+		AzureMultiConfig.AzureConfig config = multiConfig.getAd().get(municipalityId);
+
+		if (config == null) {
+			throw new IllegalArgumentException("No Azure config found for municipalityId: " + municipalityId);
+		}
+
+		return config;
+	}
+
 }
