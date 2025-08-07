@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +24,7 @@ class TeamsSenderResource {
 		this.teamsSenderService = teamsSenderService;
 	}
 
-	@PostMapping("/teams/messages")
+	@PostMapping("/{municipalityId}/teams/messages")
 	@Operation(summary = "Send a message in Microsoft Teams",
 		responses = {
 			@ApiResponse(responseCode = "204", description = "Message sent successfully", useReturnTypeSchema = true),
@@ -36,9 +37,9 @@ class TeamsSenderResource {
 			@ApiResponse(responseCode = "503", description = "Connection issue to Microsoft Graph API", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(schema = @Schema(implementation = Problem.class)))
 		})
-	ResponseEntity<Void> sendTeamsMessage(@RequestBody @Valid SendTeamsMessageRequest request) throws Exception {
+	ResponseEntity<Void> sendTeamsMessage(@RequestBody @Valid SendTeamsMessageRequest request, @PathVariable String municipalityId) throws Exception {
 
-		teamsSenderService.sendTeamsMessage(request);
+		teamsSenderService.sendTeamsMessage(request, municipalityId);
 
 		return ResponseEntity.noContent().build();
 	}

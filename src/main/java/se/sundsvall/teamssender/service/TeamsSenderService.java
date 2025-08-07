@@ -23,8 +23,8 @@ public class TeamsSenderService {
 		this.tokenService = tokenService;
 	}
 
-	public void sendTeamsMessage(SendTeamsMessageRequest request) throws Exception {
-		GraphServiceClient graphClient = tokenService.initializeGraphServiceClient();
+	public void sendTeamsMessage(SendTeamsMessageRequest request, String municipalityId) throws Exception {
+		GraphServiceClient graphClient = tokenService.initializeGraphServiceClient(municipalityId);
 
 		Chat createdChat = createChat(graphClient, systemUser, request.getRecipient());
 		ChatMessage chatMessage = createMessage(request.getMessage());
