@@ -22,7 +22,9 @@ public class TeamsSenderService {
 	public void sendTeamsMessage(SendTeamsMessageRequest request, String municipalityId) throws Exception {
 		GraphServiceClient graphClient = tokenService.initializeGraphServiceClient(municipalityId);
 
-		Chat createdChat = createChat(graphClient, systemUser, request.getRecipient());
+		User sender = Objects.requireNonNull(graphClient.me().get());
+
+		Chat createdChat = createChat(graphClient, sender.getUserPrincipalName(), request.getRecipient());
 		ChatMessage chatMessage = createMessage(request.getMessage());
 
 		graphClient.chats()
@@ -60,7 +62,8 @@ public class TeamsSenderService {
 		member.setRoles(List.of("owner"));
 
 		HashMap<String, Object> additionalData = new HashMap<>();
-		additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + user.getId() + "')");
+        assert user != null;
+        additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + user.getId() + "')");
 		member.setAdditionalData(additionalData);
 
 		return member;
