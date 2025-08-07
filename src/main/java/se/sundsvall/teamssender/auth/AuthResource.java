@@ -10,22 +10,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import se.sundsvall.teamssender.auth.service.TokenService;
-import se.sundsvall.teamssender.configuration.AzureMultiConfig;
+import se.sundsvall.teamssender.configuration.AzureConfig;
 
 @RestController
 class AuthResource {
 
-	private final AzureMultiConfig azureMultiConfig;
+	private final AzureConfig azureConfig;
 	private final TokenService tokenService;
 
-	public AuthResource(AzureMultiConfig azureMultiConfig, TokenService tokenService) {
-		this.azureMultiConfig = azureMultiConfig;
+	public AuthResource(AzureConfig azureConfig, TokenService tokenService) {
+		this.azureConfig = azureConfig;
 		this.tokenService = tokenService;
 	}
 
 	@GetMapping("/{municipalityId}/login")
 	void login(@PathVariable String municipalityId, HttpServletResponse response) throws Exception {
-		AzureMultiConfig.AzureConfig config = azureMultiConfig.getAd().get(municipalityId);
+		AzureConfig.Azure config = azureConfig.getAd().get(municipalityId);
 		if (config == null) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "Invalid municipality ID");
 			return;

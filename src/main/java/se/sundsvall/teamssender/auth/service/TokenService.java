@@ -13,23 +13,23 @@ import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.auth.integration.DatabaseTokenCache;
 import se.sundsvall.teamssender.auth.integration.StaticTokenCredential;
 import se.sundsvall.teamssender.auth.repository.ITokenCacheRepository;
-import se.sundsvall.teamssender.configuration.AzureMultiConfig;
+import se.sundsvall.teamssender.configuration.AzureConfig;
 
 @Service
 public class TokenService {
 
-	private final AzureMultiConfig multiConfig;
+	private final AzureConfig multiConfig;
 
 	private final ITokenCacheRepository tokenCacheRepository;
 
 	@Autowired
-	public TokenService(AzureMultiConfig azureMultiConfig, ITokenCacheRepository tokenCacheRepository) {
-		this.multiConfig = azureMultiConfig;
+	public TokenService(AzureConfig azureConfig, ITokenCacheRepository tokenCacheRepository) {
+		this.multiConfig = azureConfig;
 		this.tokenCacheRepository = tokenCacheRepository;
 	}
 
 	public ResponseEntity<String> exchangeAuthCodeForToken(String authCode, String municipalityId) throws Exception {
-		AzureMultiConfig.AzureConfig config = getAzureConfig(municipalityId);
+		AzureConfig.Azure config = getAzureConfig(municipalityId);
 
 		IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
 
@@ -50,12 +50,13 @@ public class TokenService {
 			.build();
 
 		app.acquireTokenSilently(silentParameters).get();
+		System.out.println(config.getName());
 
 		return ResponseEntity.ok("Token successfully saved");
 	}
 
 	public String getAccessTokenForUser(String municipalityId) throws Exception {
-		AzureMultiConfig.AzureConfig config = getAzureConfig(municipalityId);
+		AzureConfig.Azure config = getAzureConfig(municipalityId);
 
 		IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
 
@@ -83,8 +84,8 @@ public class TokenService {
 		return new GraphServiceClient(credential);
 	}
 
-	private AzureMultiConfig.AzureConfig getAzureConfig(String municipalityId) {
-		AzureMultiConfig.AzureConfig config = multiConfig.getAd().get(municipalityId);
+	private AzureConfig.Azure getAzureConfig(String municipalityId) {
+		AzureConfig.Azure config = multiConfig.getAd().get(municipalityId);
 
 		if (config == null) {
 			throw new IllegalArgumentException("No Azure config found for municipalityId: " + municipalityId);

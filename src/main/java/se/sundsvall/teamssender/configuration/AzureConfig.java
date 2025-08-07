@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "azure")
 @Getter
 @Setter
-public class AzureMultiConfig {
+public class AzureConfig {
 
-	private Map<String, AzureConfig> ad;
+	private Map<String, Azure> ad;
 
 	@Getter
 	@Setter
-	public static class AzureConfig {
+	public static class Azure {
 		private String user;
 		private String clientId;
 		private String tenantId;
@@ -24,5 +24,6 @@ public class AzureMultiConfig {
 		private String scopes;
 		private String authorityUrl;
 		private String clientSecret;
+		private String name;
 	}
 }

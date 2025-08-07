@@ -6,16 +6,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.auth.service.TokenService;
 
 @Service
 public class TeamsSenderService {
-
-	@Value("${teams.sender}")
-	private String systemUser;
 
 	private final TokenService tokenService;
 
