@@ -50,7 +50,7 @@ public class TokenService {
 			.build();
 
 		app.acquireTokenSilently(silentParameters).get();
-		System.out.println(config.getName());
+
 
 		return ResponseEntity.ok("Token successfully saved");
 	}
