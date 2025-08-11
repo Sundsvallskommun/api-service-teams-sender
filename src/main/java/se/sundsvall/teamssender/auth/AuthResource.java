@@ -29,14 +29,15 @@ class AuthResource {
 	}
 
 	@GetMapping("/{municipalityId}/login")
-	@Operation(summary = "Loggar in systemanvändare för en kommun", description = "Omdirigerar användaren till Microsofts inloggningssida.")
+	@Operation(summary = "Login for user in a specific municipality", description = "Redirects the user to Microsoft loginpage")
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "302", description = "Omdirigerar till inloggningssidan"),
-		@ApiResponse(responseCode = "404", description = "Ogiltigt kommun-ID")
+		@ApiResponse(responseCode = "302", description = "Redirects the user to Microsoft loginpage"),
+		@ApiResponse(responseCode = "404", description = "Invalid municipality ID")
 	})
 	void login(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		HttpServletResponse response) throws Exception {
+
 		AzureConfig.Azure config = azureConfig.getAd().get(municipalityId);
 		if (config == null) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "Invalid municipality ID");
@@ -58,10 +59,13 @@ class AuthResource {
 		response.sendRedirect(authorizeUrl);
 	}
 
-	@GetMapping("/swagger-ui/oauth2-redirect.html")
+	@GetMapping("/callback")
 	ResponseEntity<String> callback(HttpServletRequest request) throws Exception {
 		String code = request.getParameter("code");
-		String municipalityId = request.getParameter("state");
+		String stateParam = request.getParameter("state");
+
+		String decoded = new String(Base64.getUrlDecoder().decode(stateParam), StandardCharsets.UTF_8);
+		String municipalityId = decoded.split("=")[1];
 
 		return tokenService.exchangeAuthCodeForToken(code, municipalityId);
 	}
