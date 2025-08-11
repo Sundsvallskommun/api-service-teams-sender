@@ -24,5 +24,6 @@ public class AzureConfig {
 		private String scopes;
 		private String authorityUrl;
 		private String clientSecret;
+		private String loginUrl;
 	}
 }
