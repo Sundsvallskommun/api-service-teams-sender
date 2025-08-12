@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.auth.service.TokenService;
@@ -14,19 +13,18 @@ import se.sundsvall.teamssender.auth.service.TokenService;
 @Service
 public class TeamsSenderService {
 
-	@Value("${teams.sender}")
-	private String systemUser;
-
 	private final TokenService tokenService;
 
 	public TeamsSenderService(TokenService tokenService) {
 		this.tokenService = tokenService;
 	}
 
-	public void sendTeamsMessage(SendTeamsMessageRequest request) throws Exception {
-		GraphServiceClient graphClient = tokenService.initializeGraphServiceClient();
+	public void sendTeamsMessage(SendTeamsMessageRequest request, String municipalityId) throws Exception {
+		GraphServiceClient graphClient = tokenService.initializeGraphServiceClient(municipalityId);
 
-		Chat createdChat = createChat(graphClient, systemUser, request.getRecipient());
+		User sender = Objects.requireNonNull(graphClient.me().get());
+
+		Chat createdChat = createChat(graphClient, sender.getUserPrincipalName(), request.getRecipient());
 		ChatMessage chatMessage = createMessage(request.getMessage());
 
 		graphClient.chats()
@@ -64,7 +62,8 @@ public class TeamsSenderService {
 		member.setRoles(List.of("owner"));
 
 		HashMap<String, Object> additionalData = new HashMap<>();
-		additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + user.getId() + "')");
+
+		additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + Objects.requireNonNull(user).getId() + "')");
 		member.setAdditionalData(additionalData);
 
 		return member;

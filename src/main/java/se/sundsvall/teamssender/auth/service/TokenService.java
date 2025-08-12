@@ -3,17 +3,11 @@ package se.sundsvall.teamssender.auth.service;
 import com.azure.core.credential.TokenCredential;
 import com.microsoft.aad.msal4j.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import jakarta.annotation.PostConstruct;
 import java.net.URI;
-import java.security.PrivateKey;
-import java.security.Security;
-import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import se.sundsvall.teamssender.auth.integration.DatabaseTokenCache;
@@ -24,46 +18,24 @@ import se.sundsvall.teamssender.configuration.AzureConfig;
 @Service
 public class TokenService {
 
-	private final AzureConfig config;
+	private final AzureConfig multiConfig;
 
 	private final ITokenCacheRepository tokenCacheRepository;
 
-	private CertificateAndKey certificateAndKey;
-
-	@Value("${teams.sender}")
-	private String systemUser;
-
 	@Autowired
-	public TokenService(AzureConfig config, ITokenCacheRepository tokenCacheRepository) {
-		this.config = config;
+	public TokenService(AzureConfig azureConfig, ITokenCacheRepository tokenCacheRepository) {
+		this.multiConfig = azureConfig;
 		this.tokenCacheRepository = tokenCacheRepository;
 	}
 
-	@PostConstruct
-	public void init() throws Exception {
-		if (Security.getProvider("BC") == null) {
-			Security.addProvider(new BouncyCastleProvider());
-		}
+	public ResponseEntity<String> exchangeAuthCodeForToken(String authCode, String municipalityId) throws Exception {
+		AzureConfig.Azure config = getAzureConfig(municipalityId);
 
-		certificateAndKey = loadCertificateAndKey();
-	}
+		IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
 
-	private static class CertificateAndKey {
-		PrivateKey privateKey;
-		X509Certificate certificate;
-	}
-
-	private CertificateAndKey loadCertificateAndKey() throws Exception {
-		CertificateAndKey cak = new CertificateAndKey();
-		cak.privateKey = PemUtils.readPrivateKey(config.getCertificateKey());
-		cak.certificate = PemUtils.readCertificate(config.getCertificatePath());
-		return cak;
-	}
-
-	public ResponseEntity<String> exchangeAuthCodeForToken(String authCode) throws Exception {
-		ConfidentialClientApplication app = ConfidentialClientApplication.builder(config.getClientId(), ClientCredentialFactory.createFromCertificate(certificateAndKey.privateKey, certificateAndKey.certificate))
+		ConfidentialClientApplication app = ConfidentialClientApplication.builder(config.getClientId(), clientSecret)
 			.authority(config.getAuthorityUrl())
-			.setTokenCacheAccessAspect(new DatabaseTokenCache(systemUser, tokenCacheRepository))
+			.setTokenCacheAccessAspect(new DatabaseTokenCache(config.getUser(), tokenCacheRepository))
 			.build();
 
 		AuthorizationCodeParameters parameters = AuthorizationCodeParameters
@@ -73,41 +45,52 @@ public class TokenService {
 
 		IAuthenticationResult result = app.acquireToken(parameters).get();
 
-		ConfidentialClientApplication cachedApp = ConfidentialClientApplication.builder(config.getClientId(), ClientCredentialFactory.createFromCertificate(certificateAndKey.privateKey, certificateAndKey.certificate))
-			.authority(config.getAuthorityUrl())
-			.setTokenCacheAccessAspect(new DatabaseTokenCache(systemUser, tokenCacheRepository))
-			.build();
-
 		SilentParameters silentParameters = SilentParameters.builder(Collections.singleton(config.getScopes()))
 			.account(result.account())
 			.build();
 
-		cachedApp.acquireTokenSilently(silentParameters).get();
+		app.acquireTokenSilently(silentParameters).get();
 
 		return ResponseEntity.ok("Token successfully saved");
 	}
 
-	public String getAccessTokenForUser(String sender) throws Exception {
-		ConfidentialClientApplication confApp = ConfidentialClientApplication.builder(config.getClientId(), ClientCredentialFactory.createFromCertificate(certificateAndKey.privateKey, certificateAndKey.certificate))
+	public String getAccessTokenForUser(String municipalityId) throws Exception {
+		AzureConfig.Azure config = getAzureConfig(municipalityId);
+
+		IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
+
+		ConfidentialClientApplication confApp = ConfidentialClientApplication.builder(config.getClientId(), clientSecret)
 			.authority(config.getAuthorityUrl())
-			.setTokenCacheAccessAspect(new DatabaseTokenCache(sender, tokenCacheRepository))
+			.setTokenCacheAccessAspect(new DatabaseTokenCache(config.getUser(), tokenCacheRepository))
 			.build();
 
 		Set<IAccount> accounts = confApp.getAccounts().join();
-		Optional<IAccount> account = accounts.stream().filter(a -> a.username().equals(sender)).findFirst();
+		Optional<IAccount> account = accounts.stream().filter(a -> a.username().equals(config.getUser())).findFirst();
 
-		IAccount user = account.orElse(null);
+		SilentParameters silentParameters = SilentParameters.builder(Collections.singleton(config.getScopes()))
+			.account(account.orElse(null))
+			.build();
 
-		SilentParameters silentParameters = SilentParameters.builder(Collections.singleton(config.getScopes())).account(user).build();
 		IAuthenticationResult result = confApp.acquireTokenSilently(silentParameters).get();
 
 		return result.accessToken();
 	}
 
-	public GraphServiceClient initializeGraphServiceClient() throws Exception {
-		String accessToken = getAccessTokenForUser(systemUser);
+	public GraphServiceClient initializeGraphServiceClient(String municipalityId) throws Exception {
+		String accessToken = getAccessTokenForUser(municipalityId);
 		TokenCredential credential = new StaticTokenCredential(accessToken);
 
 		return new GraphServiceClient(credential);
 	}
+
+	private AzureConfig.Azure getAzureConfig(String municipalityId) {
+		AzureConfig.Azure config = multiConfig.getAd().get(municipalityId);
+
+		if (config == null) {
+			throw new IllegalArgumentException("No Azure config found for municipalityId: " + municipalityId);
+		}
+
+		return config;
+	}
+
 }
