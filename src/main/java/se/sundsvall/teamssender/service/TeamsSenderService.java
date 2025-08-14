@@ -33,7 +33,7 @@ public class TeamsSenderService {
 			.post(chatMessage);
 	}
 
-	public Chat createChat(GraphServiceClient graphClient, String user1Id, String user2Id) {
+	private Chat createChat(GraphServiceClient graphClient, String user1Id, String user2Id) {
 		Chat chat = new Chat();
 		chat.setChatType(ChatType.OneOnOne);
 
@@ -45,7 +45,7 @@ public class TeamsSenderService {
 		return graphClient.chats().post(chat);
 	}
 
-	public ChatMessage createMessage(String message) {
+	private ChatMessage createMessage(String message) {
 		ItemBody body = new ItemBody();
 		body.setContent(message);
 
