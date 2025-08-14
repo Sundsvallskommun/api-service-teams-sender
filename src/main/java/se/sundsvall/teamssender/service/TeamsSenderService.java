@@ -33,7 +33,7 @@ public class TeamsSenderService {
 			.post(chatMessage);
 	}
 
-	private Chat createChat(GraphServiceClient graphClient, String user1Id, String user2Id) {
+	public Chat createChat(GraphServiceClient graphClient, String user1Id, String user2Id) {
 		Chat chat = new Chat();
 		chat.setChatType(ChatType.OneOnOne);
 
@@ -45,7 +45,7 @@ public class TeamsSenderService {
 		return graphClient.chats().post(chat);
 	}
 
-	private ChatMessage createMessage(String message) {
+	public ChatMessage createMessage(String message) {
 		ItemBody body = new ItemBody();
 		body.setContent(message);
 
@@ -55,7 +55,7 @@ public class TeamsSenderService {
 		return chatMessage;
 	}
 
-	private AadUserConversationMember createMember(GraphServiceClient graphClient, String userEmail) {
+	public AadUserConversationMember createMember(GraphServiceClient graphClient, String userEmail) {
 		User user = graphClient.users().byUserId(userEmail).get();
 		AadUserConversationMember member = new AadUserConversationMember();
 		member.setOdataType("#microsoft.graph.aadUserConversationMember");
