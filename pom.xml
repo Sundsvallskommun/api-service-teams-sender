@@ -14,6 +14,7 @@
 	<properties>
 		<microsoft-graph.version>6.49.0</microsoft-graph.version>
 		<azure-identity.version>1.17.0</azure-identity.version>
+		<faux-pas.version>0.9.0</faux-pas.version>
 	</properties>
 	<dependencies>
 		<!-- Microsoft Graph -->
@@ -47,6 +48,11 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>faux-pas</artifactId>
+			<version>${faux-pas.version}</version>
 		</dependency>
 		<!-- Database -->
 		<dependency>

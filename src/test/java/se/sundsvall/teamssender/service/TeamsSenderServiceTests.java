@@ -1,19 +1,20 @@
 package se.sundsvall.teamssender.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static se.sundsvall.teamssender.TestDataFactory.createValidSendTeamsMessageRequest;
 
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.auth.service.TokenService;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,15 +29,10 @@ class TeamsSenderServiceTests {
 	@InjectMocks
 	private TeamsSenderService service;
 
-	private SendTeamsMessageRequest request;
-
-	@BeforeEach
-	void setUp() {
-		request = new SendTeamsMessageRequest("recipient@example.com", "message");
-	}
-
 	@Test
 	void sendTeamsMessage_success() throws Exception {
+		var request = createValidSendTeamsMessageRequest();
+
 		User mockSender = new User();
 		mockSender.setUserPrincipalName("sender@example.com");
 		mockSender.setId("sender-id");

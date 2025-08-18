@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
 @RestController
+@Validated
 class TeamsSenderResource {
 
 	private final TeamsSenderService teamsSenderService;
@@ -35,7 +37,9 @@ class TeamsSenderResource {
 			}))),
 			@ApiResponse(responseCode = "404", description = "Requested resource could not be found", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "422", description = "Message could not be created or sent", content = @Content(schema = @Schema(implementation = Problem.class))),
-			@ApiResponse(responseCode = "401", description = "Authentication information is either missing or invalid", content = @Content(schema = @Schema(implementation = Problem.class))),
+			@ApiResponse(responseCode = "401", description = "Authentication information is either missing or invalid", content = @Content(schema = @Schema(oneOf = {
+				Problem.class, ConstraintViolationProblem.class
+			}))),
 			@ApiResponse(responseCode = "503", description = "Connection issue to Microsoft Graph API", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(schema = @Schema(implementation = Problem.class)))
 		})
