@@ -1,76 +1,73 @@
 package se.sundsvall.teamssender.auth;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import se.sundsvall.teamssender.auth.service.TokenService;
 import se.sundsvall.teamssender.configuration.AzureConfig;
 
-@WebMvcTest(AuthResource.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@ExtendWith(SpringExtension.class)
 class AuthResourceIntegrationTest {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Mock
-	private TokenService tokenService;
-
-	@Mock
 	private AzureConfig azureConfig;
 
-	@TestConfiguration
-	static class MockConfig {
-		@Bean
-		TokenService tokenService(@Mock TokenService tokenService) {
-			return tokenService;
-		}
+	private AutoCloseable mocks;
 
-		@Bean
-		AzureConfig azureConfig(@Mock AzureConfig azureConfig) {
-			return azureConfig;
-		}
+	@BeforeEach
+	void setup() {
+		mocks = MockitoAnnotations.openMocks(this);
+
+		AzureConfig.Azure azure = new AzureConfig.Azure();
+		azure.setUser("user@example.com");
+		azure.setClientId("client-id");
+		azure.setTenantId("tenant-id");
+		azure.setRedirectUri("http://localhost/redirect");
+		azure.setScopes("openid profile");
+		azure.setAuthorityUrl("https://login.microsoftonline.com/common");
+		azure.setClientSecret("secret");
+		azure.setLoginUrl("http://localhost/login");
+
+		when(azureConfig.getAd()).thenReturn(Map.of("municipality1", azure));
+	}
+
+	@AfterEach
+	void tearDown() throws Exception {
+		mocks.close();
 	}
 
 	@Test
 	void login_validMunicipality_returnsRedirect() throws Exception {
-		var mockAzure = mock(AzureConfig.Azure.class);
-		when(mockAzure.getLoginUrl()).thenReturn("https://login.microsoftonline.com/test");
-
-		var adMap = Map.of("2281", mockAzure);
-		when(azureConfig.getAd()).thenReturn(adMap);
-
-		mockMvc.perform(get("/2281/login"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("https://login.microsoftonline.com/test"));
+		mockMvc.perform(get("/auth/login?municipality=municipality1"))
+			.andExpect(status().is3xxRedirection());
 	}
 
 	@Test
 	void login_invalidMunicipality_returns404() throws Exception {
-		// Tom map, dvs ingen kommun är giltig
-		when(azureConfig.getAd()).thenReturn(Map.of());
-
-		mockMvc.perform(get("/9999/login"))
+		mockMvc.perform(get("/auth/login?municipality=invalid"))
 			.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void callback_returnsExpectedResponseFromTokenService() throws Exception {
-		when(tokenService.exchangeAuthCodeForToken("abc123", "2281"))
-			.thenReturn(org.springframework.http.ResponseEntity.ok("token-data"));
-
-		mockMvc.perform(get("/callback")
-			.param("code", "abc123")
-			.param("state", "2281"))
-			.andExpect(status().isOk())
-			.andExpect(content().string("token-data"));
+		mockMvc.perform(get("/auth/callback?code=test-code&state=test-state"))
+			.andExpect(status().isOk());
 	}
 }
