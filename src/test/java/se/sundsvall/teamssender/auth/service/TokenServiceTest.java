@@ -1,10 +1,11 @@
 package se.sundsvall.teamssender.auth.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.microsoft.aad.msal4j.*;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import se.sundsvall.teamssender.auth.repository.ITokenCacheRepository;
 import se.sundsvall.teamssender.configuration.AzureConfig;
 
@@ -40,7 +42,7 @@ class TokenServiceTest {
 		azure.setTenantId("fake-tenant-id");
 		azure.setClientSecret("fake-client-secret");
 		azure.setAuthorityUrl("https://login.microsoftonline.com/fake-tenant-id");
-		azure.setRedirectUri("https://localhost/fake-redirect");
+		azure.setRedirectUri("https://localhost/fake-redirect"); // korrekt URI
 		azure.setScopes("user.read");
 		azure.setUser("fake-user");
 		when(azureConfig.getAd()).thenReturn(Map.of("municipality1", azure));
@@ -70,8 +72,28 @@ class TokenServiceTest {
 			var response = tokenService.exchangeAuthCodeForToken("fakeAuthCode", "municipality1");
 
 			// Assert
-			assertEquals(200, response.getStatusCodeValue());
+			assertEquals(HttpStatus.OK, response.getStatusCode());
 			assertEquals("Token successfully saved", response.getBody());
 		}
+	}
+
+	@Test
+	void exchangeAuthCodeForToken_shouldThrowException_whenMunicipalityNotFound() {
+		// Arrange
+		when(azureConfig.getAd()).thenReturn(Collections.emptyMap());
+
+		// Act & Assert
+		assertThrows(IllegalArgumentException.class,
+			() -> tokenService.exchangeAuthCodeForToken("fakeAuthCode", "unknownMunicipality"));
+	}
+
+	@Test
+	void getAccessTokenForUser_shouldThrowException_whenMunicipalityNotFound() {
+		// Arrange
+		when(azureConfig.getAd()).thenReturn(Collections.emptyMap());
+
+		// Act & Assert
+		assertThrows(IllegalArgumentException.class,
+			() -> tokenService.getAccessTokenForUser("unknownMunicipality"));
 	}
 }
