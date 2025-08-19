@@ -3,12 +3,15 @@ package se.sundsvall.teamssender.auth;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 import org.springframework.http.ResponseEntity;
+import se.sundsvall.teamssender.auth.repository.ITokenCacheRepository;
 import se.sundsvall.teamssender.auth.service.TokenService;
 import se.sundsvall.teamssender.configuration.AzureConfig;
 import se.sundsvall.teamssender.configuration.AzureConfig.Azure;
@@ -64,5 +67,35 @@ class AuthResourceTest {
 
 		assertEquals(expectedResponse, response);
 		verify(tokenService).exchangeAuthCodeForToken("abc123", "2281");
+	}
+
+	@Test
+	void initializeGraphServiceClient_shouldReturnClient() throws Exception {
+		// Arrange
+		String municipalityId = "municipality1";
+		String fakeToken = "fake-access-token";
+
+		// Mocka beroenden för TokenService
+		AzureConfig mockAzureConfig = mock(AzureConfig.class);
+		ITokenCacheRepository mockTokenCacheRepository = mock(ITokenCacheRepository.class);
+
+		// Skapa en TokenService-subklass som returnerar fejkad token
+		TokenService testService = new TokenService(mockAzureConfig, mockTokenCacheRepository) {
+			@Override
+			public String getAccessTokenForUser(String municipalityId) {
+				return fakeToken;
+			}
+		};
+
+		// Mocka GraphServiceClient-konstruktion
+		try (MockedConstruction<GraphServiceClient> mockedClient = mockConstruction(GraphServiceClient.class)) {
+
+			// Act
+			GraphServiceClient client = testService.initializeGraphServiceClient(municipalityId);
+
+			// Assert
+			assertNotNull(client, "GraphServiceClient should not be null");
+			assertEquals(1, mockedClient.constructed().size(), "GraphServiceClient should have been constructed once");
+		}
 	}
 }
