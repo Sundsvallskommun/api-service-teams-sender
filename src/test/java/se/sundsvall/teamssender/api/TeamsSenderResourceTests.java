@@ -3,6 +3,7 @@ package se.sundsvall.teamssender.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static se.sundsvall.teamssender.TestDataFactory.createValidSendTeamsMessageRequest;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,10 +37,8 @@ class TeamsSenderResourceTests {
 	private ArgumentCaptor<SendTeamsMessageRequest> requestCaptor;
 
 	@Test
-	void sendTeamsMessage() throws Exception {
-		var request = new SendTeamsMessageRequest();
-		request.setRecipient("recipient@example.com");
-		request.setMessage("message");
+	void sendTeamsMessage_success() throws Exception {
+		var request = createValidSendTeamsMessageRequest();
 
 		webTestClient.post().uri(PATH).contentType(APPLICATION_JSON)
 			.bodyValue(request)
