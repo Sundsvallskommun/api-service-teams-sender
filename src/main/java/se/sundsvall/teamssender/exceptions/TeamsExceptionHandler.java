@@ -14,8 +14,8 @@ public class TeamsExceptionHandler implements ProblemHandling {
 
 	private static final URI BASE_URI = URI.create("http://localhost:8080/problem");
 
-	@ExceptionHandler(ChatNotFoundException.class)
-	public ResponseEntity<Problem> handleChatNotFound(ChatNotFoundException ex) {
+	@ExceptionHandler(ChatNotCreatedException.class)
+	public ResponseEntity<Problem> handleChatNotFound(ChatNotCreatedException ex) {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/chat-not-found"))
 			.withTitle("Chat Not Found")

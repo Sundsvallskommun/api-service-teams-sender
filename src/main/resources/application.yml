@@ -13,4 +13,3 @@ spring:
     name: teamssender
 azure:
   ad:
-    2281:
