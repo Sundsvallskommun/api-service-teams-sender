@@ -30,7 +30,7 @@ class ExceptionsConstructorTests {
 	@Test
 	void chatNotCreatedException_constructorAndMessageAndThrowable() {
 		Throwable cause = new RuntimeException("Underlying cause of exception");
-		var ex = new MessageSendException("Chat not created", cause);
+		var ex = new ChatNotCreatedException("Chat not created", cause);
 		assertThat(ex).hasMessage("Chat not created");
 		assertThat(ex.getCause()).isSameAs(cause);
 	}
