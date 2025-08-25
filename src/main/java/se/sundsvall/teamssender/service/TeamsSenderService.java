@@ -44,12 +44,15 @@ public class TeamsSenderService {
 
 		Chat createdChat = createChat(graphClient, sender.getUserPrincipalName(), request.getRecipient());
 		ChatMessage chatMessage = createMessage(request.getMessage());
-
+		if (createdChat == null || createdChat.getId() == null) {
+			throw new ChatNotCreatedException("Chat creation failed for recipient: " + request.getRecipient());
+		}
 		try {
 			graphClient.chats()
 				.byChatId(createdChat.getId())
 				.messages()
 				.post(chatMessage);
+
 		} catch (Exception e) {
 			throw new MessageSendException("Failed to send message to recipient " + request.getRecipient(), e);
 		}
