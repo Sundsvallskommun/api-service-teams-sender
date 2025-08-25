@@ -15,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import se.sundsvall.teamssender.Application;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
+import se.sundsvall.teamssender.configuration.AzureConfig;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -36,8 +37,11 @@ class TeamsSenderResourceTests {
 	@Captor
 	private ArgumentCaptor<SendTeamsMessageRequest> requestCaptor;
 
+	@MockitoBean
+	private AzureConfig azureConfig;
+
 	@Test
-	void sendTeamsMessage_success() throws Exception {
+	void sendTeamsMessage_success() {
 		var request = createValidSendTeamsMessageRequest();
 
 		webTestClient.post().uri(PATH).contentType(APPLICATION_JSON)

@@ -3,46 +3,50 @@ package se.sundsvall.teamssender.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static se.sundsvall.teamssender.TestDataFactory.createValidSendTeamsMessageRequest;
+import static org.mockito.Mockito.*;
 
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Answers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.auth.service.TokenService;
 
 @ExtendWith(MockitoExtension.class)
 class TeamsSenderServiceTests {
 
-	@Mock
 	private TokenService tokenService;
-
-	@Mock(answer = Answers.RETURNS_DEEP_STUBS)
 	private GraphServiceClient graphClient;
-
-	@InjectMocks
 	private TeamsSenderService service;
+
+	@BeforeEach
+	void setup() {
+		tokenService = mock(TokenService.class);
+		graphClient = mock(GraphServiceClient.class, RETURNS_DEEP_STUBS);
+		service = new TeamsSenderService(tokenService);
+	}
 
 	@Test
 	void sendTeamsMessage_success() throws Exception {
-		var request = createValidSendTeamsMessageRequest();
+		TeamsSenderService serviceSpy = spy(service);
 
-		User mockSender = new User();
-		mockSender.setUserPrincipalName("sender@example.com");
-		mockSender.setId("sender-id");
+		User sender = new User();
+		sender.setUserPrincipalName("sender@example.com");
+		when(graphClient.me().get()).thenReturn(sender);
 
-		Chat mockChat = new Chat();
-		mockChat.setId("chat-123");
+		User recipient = new User();
+		recipient.setId("recipient-123");
+		when(graphClient.users().byUserId(anyString()).get()).thenReturn(recipient);
 
-		when(tokenService.initializeGraphServiceClient(anyString())).thenReturn(graphClient);
-		when(graphClient.me().get()).thenReturn(mockSender);
-		when(graphClient.chats().post(any(Chat.class))).thenReturn(mockChat);
+		Chat chat = new Chat();
+		chat.setId("chat-123");
+		when(graphClient.chats().post(any(Chat.class))).thenReturn(chat);
+
+		when(serviceSpy.tokenService.initializeGraphServiceClient(anyString())).thenReturn(graphClient);
+
+		SendTeamsMessageRequest request = new SendTeamsMessageRequest("recipient@example.com", "Hello!");
 
 		service.sendTeamsMessage(request, "municipal-1");
 

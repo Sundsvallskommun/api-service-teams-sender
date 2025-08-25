@@ -21,6 +21,7 @@ import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
 import se.sundsvall.teamssender.Application;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
+import se.sundsvall.teamssender.configuration.AzureConfig;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -35,6 +36,9 @@ class TeamsSenderResourceFailureTests {
 
 	@MockitoBean
 	private TeamsSenderService teamsSenderService;
+
+	@MockitoBean
+	private AzureConfig azureConfig;
 
 	@ParameterizedTest
 	@MethodSource({
