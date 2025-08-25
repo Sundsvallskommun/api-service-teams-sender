@@ -6,6 +6,6 @@ class ApplicationTest {
 
 	@Test
 	void mainShouldRunWithoutErrors() {
-		Application.main();
+		Application.main(new String[]{});
 	}
 }
