@@ -131,8 +131,9 @@ spring:
 - **Logging Configuration:**
 
   Adjust logging levels if necessary.
-- **Needed Profile** 
- 
+
+- **Needed Profile**
+
   This API needs to have an Azure configured user that has a license for MS Teams, that is used to send messages.
 
 ## Contributing
