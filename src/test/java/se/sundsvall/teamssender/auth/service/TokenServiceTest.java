@@ -100,6 +100,41 @@ class TokenServiceTest {
 	}
 
 	@Test
+	void getAccessTokenForUser_shouldHandleMissingAccount() throws Exception {
+		AzureConfig.Azure azure = new AzureConfig.Azure();
+		azure.setClientId("client");
+		azure.setClientSecret("secret");
+		azure.setAuthorityUrl("https://authority");
+		azure.setUser("user@example.com");
+		azure.setScopes("user.read");
+
+		when(azureConfig.getAd()).thenReturn(Map.of("2281", azure));
+
+		ConfidentialClientApplication mockApp = mock(ConfidentialClientApplication.class);
+		when(mockApp.getAccounts()).thenReturn(CompletableFuture.completedFuture(Collections.emptySet()));
+
+		IAuthenticationResult result = mock(IAuthenticationResult.class);
+		when(result.accessToken()).thenReturn("token");
+
+		when(mockApp.acquireTokenSilently(any(SilentParameters.class)))
+			.thenReturn(CompletableFuture.completedFuture(result));
+
+		var builder = mock(ConfidentialClientApplication.Builder.class);
+		when(builder.authority(anyString())).thenReturn(builder);
+		when(builder.setTokenCacheAccessAspect(any())).thenReturn(builder);
+		when(builder.build()).thenReturn(mockApp);
+
+		try (var mocked = mockStatic(ConfidentialClientApplication.class)) {
+			mocked.when(() -> ConfidentialClientApplication.builder(any(), any()))
+				.thenReturn(builder);
+
+			String accessToken = tokenService.getAccessTokenForUser("2281");
+
+			assertThat(accessToken).isEqualTo("token");
+		}
+	}
+
+	@Test
 	void initializeGraphServiceClient_returnsClient() throws Exception {
 		String municipalityId = "2281";
 		String fakeToken = "fake-token";
@@ -110,5 +145,13 @@ class TokenServiceTest {
 		GraphServiceClient client = spyService.initializeGraphServiceClient(municipalityId);
 
 		assertThat(client).isNotNull();
+	}
+
+	@Test
+	void initializeGraphServiceClient_shouldThrow_whenAccessTokenFails() throws Exception {
+		TokenService spy = spy(tokenService);
+		doThrow(new RuntimeException("Token error")).when(spy).getAccessTokenForUser("2281");
+
+		assertThrows(RuntimeException.class, () -> spy.initializeGraphServiceClient("2281"));
 	}
 }
