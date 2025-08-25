@@ -6,6 +6,6 @@ public class ChatNotCreatedException extends RuntimeException {
 	}
 
 	public ChatNotCreatedException(String message, Throwable cause) {
-		super(message);
+		super(message, cause);
 	}
 }

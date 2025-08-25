@@ -6,6 +6,6 @@ public class GraphConnectionException extends RuntimeException {
 	}
 
 	public GraphConnectionException(String message, Throwable cause) {
-		super(message);
+		super(message, cause);
 	}
 }
