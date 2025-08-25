@@ -2,54 +2,51 @@ package se.sundsvall.teamssender.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static se.sundsvall.teamssender.TestDataFactory.createValidSendTeamsMessageRequest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
-import se.sundsvall.teamssender.configuration.AzureConfig;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TeamsSenderResourceTests {
-
-	private static final String MUNICIPALITY_ID = "2281";
-
-	private static final String PATH = "/" + MUNICIPALITY_ID + "/teams/messages";
+@WebMvcTest(controllers = TeamsSenderResource.class)
+@AutoConfigureMockMvc(addFilters = false)
+class TeamsSenderResourceTest {
 
 	@Autowired
-	private WebTestClient webTestClient;
+	private MockMvc mockMvc;
+
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	@MockitoBean
 	private TeamsSenderService teamsSenderService;
 
-	@Captor
-	private ArgumentCaptor<String> municipalityIdCaptor;
-	@Captor
-	private ArgumentCaptor<SendTeamsMessageRequest> requestCaptor;
-
-	@MockitoBean
-	private AzureConfig azureConfig;
-
 	@Test
-	void sendTeamsMessage_success() {
+	void returns204OnSuccess() throws Exception {
+		final String municipalityId = "2281";
+
 		var request = createValidSendTeamsMessageRequest();
 
-		webTestClient.post().uri(PATH).contentType(APPLICATION_JSON)
-			.bodyValue(request)
-			.exchange()
-			.expectStatus().isNoContent()
-			.expectBody().isEmpty();
+		mockMvc.perform(post("/" + municipalityId + "/teams/messages")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isNoContent());
 
-		verify(teamsSenderService).sendTeamsMessage(requestCaptor.capture(), municipalityIdCaptor.capture());
+		ArgumentCaptor<SendTeamsMessageRequest> reqCaptor = ArgumentCaptor.forClass(SendTeamsMessageRequest.class);
+		ArgumentCaptor<String> muniCaptor = ArgumentCaptor.forClass(String.class);
 
-		assertThat(municipalityIdCaptor.getValue()).isEqualTo(MUNICIPALITY_ID);
-		assertThat(requestCaptor.getValue()).usingRecursiveComparison().isEqualTo(request);
+		verify(teamsSenderService).sendTeamsMessage(reqCaptor.capture(), muniCaptor.capture());
+		assertThat(muniCaptor.getValue()).isEqualTo(municipalityId);
+		assertThat(reqCaptor.getValue()).usingRecursiveComparison().isEqualTo(request);
 	}
 }
