@@ -41,7 +41,7 @@ class AuthResource {
 			return;
 		}
 
-		response.sendRedirect(config.getLoginUrl());
+		response.sendRedirect(config.getLoginUrl()); // Lägg till check att LoginUrl finns, t.ex. try catch
 	}
 
 	@GetMapping("/callback")
