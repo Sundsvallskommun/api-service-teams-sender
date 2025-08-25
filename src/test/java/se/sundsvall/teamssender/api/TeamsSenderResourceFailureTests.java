@@ -24,8 +24,7 @@ import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.configuration.AzureConfig;
 import se.sundsvall.teamssender.service.TeamsSenderService;
 
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("junit")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TeamsSenderResourceFailureTests {
 	private static final String MUNICIPALITY_ID = "2281";
 
