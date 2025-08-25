@@ -1,10 +1,12 @@
 package se.sundsvall.teamssender.auth.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.microsoft.aad.msal4j.*;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -95,5 +97,18 @@ class TokenServiceTest {
 		// Act & Assert
 		assertThrows(IllegalArgumentException.class,
 			() -> tokenService.getAccessTokenForUser("unknownMunicipality"));
+	}
+
+	@Test
+	void initializeGraphServiceClient_returnsClient() throws Exception {
+		String municipalityId = "2281";
+		String fakeToken = "fake-token";
+
+		TokenService spyService = spy(tokenService);
+		doReturn(fakeToken).when(spyService).getAccessTokenForUser(municipalityId);
+
+		GraphServiceClient client = spyService.initializeGraphServiceClient(municipalityId);
+
+		assertThat(client).isNotNull();
 	}
 }
