@@ -42,9 +42,9 @@ _Sending messages from the messaging service to teams users._
 This microservice depends on the following services:
 
 - **Microsoft Graph**
-    - **Purpose:** To send messages over teams.
-    - **Repository:** [Link to the repository](https://learn.microsoft.com/sv-se/graph/overview)
-    - **Setup Instructions:** Refer to its documentation for installation and configuration steps.
+  - **Purpose:** To send messages over teams.
+  - **Repository:** [Link to the repository](https://learn.microsoft.com/sv-se/graph/overview)
+  - **Setup Instructions:** Refer to its documentation for installation and configuration steps.
 
 Ensure that these services are running and properly configured before starting this microservice.
 
