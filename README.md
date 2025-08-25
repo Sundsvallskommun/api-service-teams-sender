@@ -132,6 +132,10 @@ spring:
 
   Adjust logging levels if necessary.
 
+- **Needed Profile**
+
+  This API needs to have an Azure configured user that has a license for MS Teams, that is used to send messages.
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](https://github.com/Sundsvallskommun/.github/blob/main/.github/CONTRIBUTING.md) for guidelines.
