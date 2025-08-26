@@ -19,7 +19,9 @@ class SendTeamsMessageRequestValidationTests {
 
 	@BeforeEach
 	void setUp() {
-		validator = Validation.buildDefaultValidatorFactory().getValidator();
+		try (var factory = Validation.buildDefaultValidatorFactory()) {
+			validator = factory.getValidator();
+		}
 	}
 
 	@Test

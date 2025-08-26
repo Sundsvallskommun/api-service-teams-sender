@@ -19,7 +19,7 @@ class TokenCacheEntityTest {
 		assertEquals("user1", entity.getUserId());
 		assertArrayEquals(data, entity.getCacheData());
 
-		// lastUpdated ska initialt vara null innan JPA sätter det
+
 		assertNull(entity.getLastUpdated());
 	}
 
@@ -33,7 +33,7 @@ class TokenCacheEntityTest {
 		assertEquals("user2", entity.getUserId());
 		assertArrayEquals(data, entity.getCacheData());
 
-		// lastUpdated ska fortfarande vara null innan JPA sätter det
+
 		assertNull(entity.getLastUpdated());
 	}
 
