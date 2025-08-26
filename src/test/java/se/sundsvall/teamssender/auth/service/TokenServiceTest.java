@@ -70,9 +70,7 @@ class TokenServiceTest {
 			mockedStatic.when(() -> ConfidentialClientApplication.builder(anyString(), any(IClientCredential.class)))
 				.thenReturn(mockBuilder);
 
-
 			var response = tokenService.exchangeAuthCodeForToken("fakeAuthCode", "municipality1");
-
 
 			assertEquals(HttpStatus.OK, response.getStatusCode());
 			assertEquals("Token successfully saved", response.getBody());
@@ -84,7 +82,6 @@ class TokenServiceTest {
 
 		when(azureConfig.getAd()).thenReturn(Collections.emptyMap());
 
-
 		assertThrows(IllegalArgumentException.class,
 			() -> tokenService.exchangeAuthCodeForToken("fakeAuthCode", "unknownMunicipality"));
 	}
@@ -93,7 +90,6 @@ class TokenServiceTest {
 	void getAccessTokenForUser_shouldThrowException_whenMunicipalityNotFound() {
 
 		when(azureConfig.getAd()).thenReturn(Collections.emptyMap());
-
 
 		assertThrows(IllegalArgumentException.class,
 			() -> tokenService.getAccessTokenForUser("unknownMunicipality"));

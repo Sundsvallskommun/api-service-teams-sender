@@ -75,10 +75,8 @@ class AuthResourceTest {
 		String municipalityId = "municipality1";
 		String fakeToken = "fake-access-token";
 
-
 		AzureConfig mockAzureConfig = mock(AzureConfig.class);
 		ITokenCacheRepository mockTokenCacheRepository = mock(ITokenCacheRepository.class);
-
 
 		TokenService testService = new TokenService(mockAzureConfig, mockTokenCacheRepository) {
 			@Override
@@ -87,12 +85,9 @@ class AuthResourceTest {
 			}
 		};
 
-
 		try (MockedConstruction<GraphServiceClient> mockedClient = mockConstruction(GraphServiceClient.class)) {
 
-
 			GraphServiceClient client = testService.initializeGraphServiceClient(municipalityId);
-
 
 			assertNotNull(client, "GraphServiceClient should not be null");
 			assertEquals(1, mockedClient.constructed().size(), "GraphServiceClient should have been constructed once");
