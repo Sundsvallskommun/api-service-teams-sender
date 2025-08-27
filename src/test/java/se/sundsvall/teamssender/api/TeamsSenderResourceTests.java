@@ -20,7 +20,7 @@ import se.sundsvall.teamssender.service.TeamsSenderService;
 
 @WebMvcTest(controllers = TeamsSenderResource.class)
 @AutoConfigureMockMvc(addFilters = false)
-class TeamsSenderResourceTest {
+class TeamsSenderResourceTests {
 
 	@Autowired
 	private MockMvc mockMvc;
