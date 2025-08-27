@@ -11,5 +11,3 @@ openapi:
 spring:
   application:
     name: teamssender
-azure:
-  ad:

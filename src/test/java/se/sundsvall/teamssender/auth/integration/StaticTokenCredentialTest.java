@@ -13,7 +13,6 @@ class StaticTokenCredentialTest {
 		String expectedToken = "fake-access-token";
 		StaticTokenCredential credential = new StaticTokenCredential(expectedToken);
 
-		// Blockera Mono och få token direkt
 		AccessToken token = credential.getToken(new TokenRequestContext()).block();
 
 		assertNotNull(token);

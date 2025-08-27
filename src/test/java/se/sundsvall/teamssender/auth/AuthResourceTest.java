@@ -71,15 +71,13 @@ class AuthResourceTest {
 
 	@Test
 	void initializeGraphServiceClient_shouldReturnClient() throws Exception {
-		// Arrange
+
 		String municipalityId = "municipality1";
 		String fakeToken = "fake-access-token";
 
-		// Mocka beroenden för TokenService
 		AzureConfig mockAzureConfig = mock(AzureConfig.class);
 		ITokenCacheRepository mockTokenCacheRepository = mock(ITokenCacheRepository.class);
 
-		// Skapa en TokenService-subklass som returnerar fejkad token
 		TokenService testService = new TokenService(mockAzureConfig, mockTokenCacheRepository) {
 			@Override
 			public String getAccessTokenForUser(String municipalityId) {
@@ -87,13 +85,10 @@ class AuthResourceTest {
 			}
 		};
 
-		// Mocka GraphServiceClient-konstruktion
 		try (MockedConstruction<GraphServiceClient> mockedClient = mockConstruction(GraphServiceClient.class)) {
 
-			// Act
 			GraphServiceClient client = testService.initializeGraphServiceClient(municipalityId);
 
-			// Assert
 			assertNotNull(client, "GraphServiceClient should not be null");
 			assertEquals(1, mockedClient.constructed().size(), "GraphServiceClient should have been constructed once");
 		}
