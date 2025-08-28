@@ -40,7 +40,11 @@ class AuthResource {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, "Invalid municipality ID");
 			return;
 		}
-
+		String loginUrl = config.getLoginUrl();
+		if (loginUrl == null || loginUrl.isBlank()) {
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Login URL is missing for municipality: " + municipalityId);
+			return;
+		}
 		response.sendRedirect(config.getLoginUrl());
 	}
 

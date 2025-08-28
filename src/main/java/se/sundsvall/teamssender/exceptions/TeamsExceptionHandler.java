@@ -14,10 +14,10 @@ public class TeamsExceptionHandler implements ProblemHandling {
 
 	private static final URI BASE_URI = URI.create("http://localhost:8080/problem");
 
-	@ExceptionHandler(ChatNotFoundException.class)
-	public ResponseEntity<Problem> handleChatNotFound(ChatNotFoundException ex) {
+	@ExceptionHandler(ChatNotCreatedException.class)
+	public ResponseEntity<Problem> handleChatNotFound(ChatNotCreatedException ex) {
 		Problem problem = Problem.builder()
-			.withType(BASE_URI.resolve("/chat-not-found"))
+			.withType(URI.create(BASE_URI + "/chat-not-found"))
 			.withTitle("Chat Not Found")
 			.withStatus(Status.NOT_FOUND)
 			.withDetail(ex.getMessage())
@@ -28,7 +28,7 @@ public class TeamsExceptionHandler implements ProblemHandling {
 	@ExceptionHandler(MessageSendException.class)
 	public ResponseEntity<Problem> handleMessageSendFailure(MessageSendException ex) {
 		Problem problem = Problem.builder()
-			.withType(BASE_URI.resolve("/message-failure"))
+			.withType(URI.create(BASE_URI + "/message-failure"))
 			.withTitle("Message Send Failure")
 			.withStatus(Status.UNPROCESSABLE_ENTITY)
 			.withDetail(ex.getMessage())
@@ -39,7 +39,7 @@ public class TeamsExceptionHandler implements ProblemHandling {
 	@ExceptionHandler(AuthenticationException.class)
 	public ResponseEntity<Problem> handleAuth(AuthenticationException ex) {
 		Problem problem = Problem.builder()
-			.withType(BASE_URI.resolve("/auth-error"))
+			.withType(URI.create(BASE_URI + "/auth-error"))
 			.withTitle("Authentication or Authorization Error")
 			.withStatus(Status.UNAUTHORIZED)
 			.withDetail(ex.getMessage())
@@ -50,7 +50,7 @@ public class TeamsExceptionHandler implements ProblemHandling {
 	@ExceptionHandler(GraphConnectionException.class)
 	public ResponseEntity<Problem> handleGraphConnection(GraphConnectionException ex) {
 		Problem problem = Problem.builder()
-			.withType(BASE_URI.resolve("/graph-error"))
+			.withType(URI.create(BASE_URI + "/graph-error"))
 			.withTitle("Graph API Connection Error")
 			.withStatus(Status.SERVICE_UNAVAILABLE)
 			.withDetail(ex.getMessage())
@@ -62,7 +62,7 @@ public class TeamsExceptionHandler implements ProblemHandling {
 	public ResponseEntity<Problem> handleThrowable(final Throwable throwable,
 		@NotNull final NativeWebRequest request) {
 		Problem problem = Problem.builder()
-			.withType(BASE_URI.resolve("/internal-error"))
+			.withType(URI.create(BASE_URI + "/internal-error"))
 			.withTitle("Unexpected Internal Server Error")
 			.withStatus(Status.INTERNAL_SERVER_ERROR)
 			.withDetail(throwable.getMessage())
@@ -73,7 +73,7 @@ public class TeamsExceptionHandler implements ProblemHandling {
 	@ExceptionHandler(RecipientException.class)
 	public ResponseEntity<Problem> handleRecipient(RecipientException ex) {
 		Problem problem = Problem.builder()
-			.withType(BASE_URI.resolve("/recipient-error"))
+			.withType(URI.create(BASE_URI + "/recipient-error"))
 			.withTitle("Recipient not found Error")
 			.withStatus(Status.NOT_FOUND)
 			.withDetail(ex.getMessage())

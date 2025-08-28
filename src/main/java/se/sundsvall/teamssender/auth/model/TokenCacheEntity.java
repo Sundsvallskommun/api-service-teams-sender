@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,9 +19,11 @@ public class TokenCacheEntity {
 
 	@Id
 	@Column(name = "user_id", nullable = false)
+	@NotNull
 	private String userId;
 	@Lob
-	@Column(name = "cache_data", nullable = false, columnDefinition = "LONGBLOB")
+	@Column(name = "cache_data", nullable = false, columnDefinition = "MEDIUMBLOB")
+	@NotNull
 	private byte[] cacheData;
 
 	@UpdateTimestamp

@@ -17,7 +17,7 @@ _Sending messages from the messaging service to teams users._
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/Sundsvallskommun/YOUR-PROJECT-ID.git
+   git clone https://github.com/Sundsvallskommun/api-service-teams-sender.git
    cd YOUR-PROJECT-ID
    ```
 2. **Configure the application:**
@@ -41,9 +41,9 @@ _Sending messages from the messaging service to teams users._
 
 This microservice depends on the following services:
 
-- **Service Name**
-  - **Purpose:** Brief description of what the dependent service does.
-  - **Repository:** [Link to the repository](https://github.com/Sundsvallskommun/service_name)
+- **Microsoft Graph**
+  - **Purpose:** To send messages over teams.
+  - **Repository:** [Link to the repository](https://learn.microsoft.com/sv-se/graph/overview)
   - **Setup Instructions:** Refer to its documentation for installation and configuration steps.
 
 Ensure that these services are running and properly configured before starting this microservice.
@@ -65,7 +65,13 @@ Refer to the [API Documentation](#api-documentation) for detailed information on
 ### Example Request
 
 ```bash
-curl -X GET http://localhost:8080/api/resource
+curl -X POST http://localhost:8080/2281/teams/messages \ 
+  -H "Content-Type: application/json" \
+  -d {
+  "recipient": "first.last@municipaladress.com",
+  "message": "Your message here"
+}
+
 ```
 
 ## Configuration
@@ -125,6 +131,10 @@ spring:
 - **Logging Configuration:**
 
   Adjust logging levels if necessary.
+
+- **Needed Profile**
+
+  This API needs to have an Azure configured user that has a license for MS Teams, that is used to send messages.
 
 ## Contributing
 

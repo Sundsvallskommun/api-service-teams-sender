@@ -1,6 +1,7 @@
 package se.sundsvall.teamssender.api.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ public class SendTeamsMessageRequest {
 
 	@NotBlank
 	@Schema(description = "The user ID or email to send the message to", example = "first.last@municipaladress.com")
+	@Email
 	private String recipient;
 
 	@NotBlank
