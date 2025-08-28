@@ -5,10 +5,12 @@ import java.util.Optional;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import se.sundsvall.dept44.util.jacoco.ExcludeFromJacocoGeneratedCoverageReport;
 
 /**
  * Disable the authentication for the "/login"-endpoint since it needs to be public.
  */
+@ExcludeFromJacocoGeneratedCoverageReport
 @Configuration
 public class OpenApiConfigurationExtension {
 
