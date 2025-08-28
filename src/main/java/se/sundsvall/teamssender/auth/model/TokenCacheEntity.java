@@ -22,7 +22,7 @@ public class TokenCacheEntity {
 	@NotNull
 	private String userId;
 	@Lob
-	@Column(name = "cache_data", nullable = false, columnDefinition = "LONGBLOB")
+	@Column(name = "cache_data", nullable = false, columnDefinition = "MEDIUMBLOB")
 	@NotNull
 	private byte[] cacheData;
 
