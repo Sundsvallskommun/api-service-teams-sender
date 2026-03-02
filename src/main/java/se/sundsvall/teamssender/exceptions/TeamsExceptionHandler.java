@@ -1,16 +1,20 @@
 package se.sundsvall.teamssender.exceptions;
 
 import java.net.URI;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.NativeWebRequest;
-import org.zalando.problem.Problem;
-import org.zalando.problem.Status;
-import org.zalando.problem.spring.web.advice.ProblemHandling;
+import se.sundsvall.dept44.problem.Problem;
+
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @ControllerAdvice
-public class TeamsExceptionHandler implements ProblemHandling {
+public class TeamsExceptionHandler {
 
 	private static final URI BASE_URI = URI.create("http://localhost:8080/problem");
 
@@ -19,10 +23,10 @@ public class TeamsExceptionHandler implements ProblemHandling {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/chat-not-found"))
 			.withTitle("Chat Not Found")
-			.withStatus(Status.NOT_FOUND)
+			.withStatus(NOT_FOUND)
 			.withDetail(ex.getMessage())
 			.build();
-		return ResponseEntity.status(Status.NOT_FOUND.getStatusCode()).body(problem);
+		return ResponseEntity.status(NOT_FOUND.value()).body(problem);
 	}
 
 	@ExceptionHandler(MessageSendException.class)
@@ -30,10 +34,10 @@ public class TeamsExceptionHandler implements ProblemHandling {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/message-failure"))
 			.withTitle("Message Send Failure")
-			.withStatus(Status.UNPROCESSABLE_ENTITY)
+			.withStatus(UNPROCESSABLE_ENTITY)
 			.withDetail(ex.getMessage())
 			.build();
-		return ResponseEntity.status(Status.UNPROCESSABLE_ENTITY.getStatusCode()).body(problem);
+		return ResponseEntity.status(UNPROCESSABLE_ENTITY.value()).body(problem);
 	}
 
 	@ExceptionHandler(AuthenticationException.class)
@@ -41,10 +45,10 @@ public class TeamsExceptionHandler implements ProblemHandling {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/auth-error"))
 			.withTitle("Authentication or Authorization Error")
-			.withStatus(Status.UNAUTHORIZED)
+			.withStatus(UNAUTHORIZED)
 			.withDetail(ex.getMessage())
 			.build();
-		return ResponseEntity.status(Status.UNAUTHORIZED.getStatusCode()).body(problem);
+		return ResponseEntity.status(UNAUTHORIZED.value()).body(problem);
 	}
 
 	@ExceptionHandler(GraphConnectionException.class)
@@ -52,22 +56,22 @@ public class TeamsExceptionHandler implements ProblemHandling {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/graph-error"))
 			.withTitle("Graph API Connection Error")
-			.withStatus(Status.SERVICE_UNAVAILABLE)
+			.withStatus(SERVICE_UNAVAILABLE)
 			.withDetail(ex.getMessage())
 			.build();
-		return ResponseEntity.status(Status.SERVICE_UNAVAILABLE.getStatusCode()).body(problem);
+		return ResponseEntity.status(SERVICE_UNAVAILABLE.value()).body(problem);
 	}
 
-	@Override
+	@ExceptionHandler(Throwable.class)
 	public ResponseEntity<Problem> handleThrowable(final Throwable throwable,
-		@NotNull final NativeWebRequest request) {
+		final NativeWebRequest request) {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/internal-error"))
 			.withTitle("Unexpected Internal Server Error")
-			.withStatus(Status.INTERNAL_SERVER_ERROR)
+			.withStatus(INTERNAL_SERVER_ERROR)
 			.withDetail(throwable.getMessage())
 			.build();
-		return ResponseEntity.status(Status.INTERNAL_SERVER_ERROR.getStatusCode()).body(problem);
+		return ResponseEntity.status(INTERNAL_SERVER_ERROR.value()).body(problem);
 	}
 
 	@ExceptionHandler(RecipientException.class)
@@ -75,9 +79,9 @@ public class TeamsExceptionHandler implements ProblemHandling {
 		Problem problem = Problem.builder()
 			.withType(BASE_URI.resolve("/recipient-error"))
 			.withTitle("Recipient not found Error")
-			.withStatus(Status.NOT_FOUND)
+			.withStatus(NOT_FOUND)
 			.withDetail(ex.getMessage())
 			.build();
-		return ResponseEntity.status(Status.NOT_FOUND.getStatusCode()).body(problem);
+		return ResponseEntity.status(NOT_FOUND.value()).body(problem);
 	}
 }
