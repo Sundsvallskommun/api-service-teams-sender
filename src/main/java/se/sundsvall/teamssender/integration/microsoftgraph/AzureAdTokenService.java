@@ -9,10 +9,13 @@ import com.microsoft.aad.msal4j.IAuthenticationResult;
 import com.microsoft.aad.msal4j.IClientCredential;
 import com.microsoft.aad.msal4j.SilentParameters;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import se.sundsvall.dept44.problem.Problem;
@@ -21,6 +24,7 @@ import se.sundsvall.teamssender.integration.db.DatabaseTokenCache;
 import se.sundsvall.teamssender.integration.db.TokenCacheRepository;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -28,8 +32,11 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 public class AzureAdTokenService {
 
 	private final AzureConfig multiConfig;
-
 	private final TokenCacheRepository tokenCacheRepository;
+
+	// MSAL applications are thread-safe and meant to be long-lived; one per municipality keeps the in-process token
+	// cache warm and lets MSAL serialise access to the persisted token_cache row within this process.
+	private final Map<String, ConfidentialClientApplication> clientApplications = new ConcurrentHashMap<>();
 
 	public AzureAdTokenService(final AzureConfig azureConfig, final TokenCacheRepository tokenCacheRepository) {
 		this.multiConfig = azureConfig;
@@ -38,15 +45,9 @@ public class AzureAdTokenService {
 
 	public ResponseEntity<String> exchangeAuthCodeForToken(final String authCode, final String municipalityId) {
 		final AzureConfig.Azure config = getAzureConfig(municipalityId);
+		final ConfidentialClientApplication app = clientApplication(municipalityId);
 
 		try {
-			final IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
-
-			final ConfidentialClientApplication app = ConfidentialClientApplication.builder(config.getClientId(), clientSecret)
-				.authority(config.getAuthorityUrl())
-				.setTokenCacheAccessAspect(new DatabaseTokenCache(config.getUser(), tokenCacheRepository))
-				.build();
-
 			final AuthorizationCodeParameters parameters = AuthorizationCodeParameters
 				.builder(authCode, new URI(config.getRedirectUri()))
 				.scopes(Collections.singleton(config.getScopes()))
@@ -71,23 +72,17 @@ public class AzureAdTokenService {
 
 	public String getAccessTokenForUser(final String municipalityId) {
 		final AzureConfig.Azure config = getAzureConfig(municipalityId);
+		final ConfidentialClientApplication app = clientApplication(municipalityId);
 
 		try {
-			final IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
-
-			final ConfidentialClientApplication confApp = ConfidentialClientApplication.builder(config.getClientId(), clientSecret)
-				.authority(config.getAuthorityUrl())
-				.setTokenCacheAccessAspect(new DatabaseTokenCache(config.getUser(), tokenCacheRepository))
-				.build();
-
-			final Set<IAccount> accounts = confApp.getAccounts().join();
+			final Set<IAccount> accounts = app.getAccounts().join();
 			final Optional<IAccount> account = accounts.stream().filter(a -> a.username().equals(config.getUser())).findFirst();
 
 			final SilentParameters silentParameters = SilentParameters.builder(Collections.singleton(config.getScopes()))
 				.account(account.orElse(null))
 				.build();
 
-			return confApp.acquireTokenSilently(silentParameters).get().accessToken();
+			return app.acquireTokenSilently(silentParameters).get().accessToken();
 		} catch (final InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw Problem.valueOf(BAD_GATEWAY, "Interrupted while acquiring an access token");
@@ -105,6 +100,21 @@ public class AzureAdTokenService {
 		final TokenCredential credential = new StaticTokenCredential(accessToken);
 
 		return new GraphServiceClient(credential);
+	}
+
+	private ConfidentialClientApplication clientApplication(final String municipalityId) {
+		return clientApplications.computeIfAbsent(municipalityId, id -> {
+			final AzureConfig.Azure config = getAzureConfig(id);
+			final IClientCredential clientSecret = ClientCredentialFactory.createFromSecret(config.getClientSecret());
+			try {
+				return ConfidentialClientApplication.builder(config.getClientId(), clientSecret)
+					.authority(config.getAuthorityUrl())
+					.setTokenCacheAccessAspect(new DatabaseTokenCache(config.getUser(), tokenCacheRepository))
+					.build();
+			} catch (final MalformedURLException e) {
+				throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Invalid Azure authority URL configured for municipalityId '%s': %s".formatted(id, e.getMessage()));
+			}
+		});
 	}
 
 	private AzureConfig.Azure getAzureConfig(final String municipalityId) {
