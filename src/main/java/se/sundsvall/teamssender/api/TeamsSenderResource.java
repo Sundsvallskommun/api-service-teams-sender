@@ -41,7 +41,7 @@ class TeamsSenderResource {
 		})
 	ResponseEntity<Void> sendTeamsMessage(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@RequestBody @Valid SendTeamsMessageRequest request) throws Exception {
+		@RequestBody @Valid SendTeamsMessageRequest request) {
 
 		teamsSenderService.sendTeamsMessage(request, municipalityId);
 
