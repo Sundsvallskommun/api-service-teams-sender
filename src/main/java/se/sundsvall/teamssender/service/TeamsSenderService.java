@@ -1,6 +1,7 @@
 package se.sundsvall.teamssender.service;
 
 import com.microsoft.graph.models.AadUserConversationMember;
+import com.microsoft.graph.models.BodyType;
 import com.microsoft.graph.models.Chat;
 import com.microsoft.graph.models.ChatMessage;
 import com.microsoft.graph.models.ChatType;
@@ -8,7 +9,6 @@ import com.microsoft.graph.models.ConversationMember;
 import com.microsoft.graph.models.ItemBody;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,10 +63,7 @@ public class TeamsSenderService {
 		final Chat chat = new Chat();
 		chat.setChatType(ChatType.OneOnOne);
 
-		final LinkedList<ConversationMember> members = new LinkedList<>();
-		members.add(asMember(senderId));
-		members.add(asMember(resolveRecipientId(graphClient, recipient)));
-		chat.setMembers(members);
+		chat.setMembers(List.<ConversationMember>of(asMember(senderId), asMember(resolveRecipientId(graphClient, recipient))));
 
 		final Chat createdChat;
 		try {
@@ -91,6 +88,7 @@ public class TeamsSenderService {
 
 	private ChatMessage createMessage(final String message) {
 		final ItemBody body = new ItemBody();
+		body.setContentType(BodyType.Text);
 		body.setContent(message);
 
 		final ChatMessage chatMessage = new ChatMessage();
