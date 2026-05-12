@@ -14,14 +14,14 @@ import se.sundsvall.teamssender.integration.microsoftgraph.StaticTokenCredential
 
 @Configuration
 @Profile("mock")
-public class MockTokenServiceConfiguration {
+public class MockAzureAdTokenServiceConfiguration {
 
 	@Value("${graph.base-url}")
 	private String graphBaseUrl;
 
 	@Bean
 	@Primary
-	public AzureAdTokenService mockTokenService(final AzureConfig azureConfig, final TokenCacheRepository tokenCacheRepository) {
+	public AzureAdTokenService mockAzureAdTokenService(final AzureConfig azureConfig, final TokenCacheRepository tokenCacheRepository) {
 
 		return new AzureAdTokenService(azureConfig, tokenCacheRepository) {
 

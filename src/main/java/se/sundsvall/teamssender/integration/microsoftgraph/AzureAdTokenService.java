@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.teamssender.configuration.AzureConfig;
 import se.sundsvall.teamssender.integration.db.DatabaseTokenCache;
@@ -24,7 +24,7 @@ import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
-@Service
+@Component
 public class AzureAdTokenService {
 
 	private final AzureConfig multiConfig;
