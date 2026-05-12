@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
-import se.sundsvall.dept44.problem.*;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 import se.sundsvall.teamssender.service.TeamsSenderService;
@@ -22,7 +22,7 @@ class TeamsSenderResource {
 
 	private final TeamsSenderService teamsSenderService;
 
-	public TeamsSenderResource(TeamsSenderService teamsSenderService) {
+	public TeamsSenderResource(final TeamsSenderService teamsSenderService) {
 		this.teamsSenderService = teamsSenderService;
 	}
 
@@ -41,7 +41,7 @@ class TeamsSenderResource {
 		})
 	ResponseEntity<Void> sendTeamsMessage(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@RequestBody @Valid SendTeamsMessageRequest request) {
+		@RequestBody @Valid final SendTeamsMessageRequest request) {
 
 		teamsSenderService.sendTeamsMessage(request, municipalityId);
 
