@@ -20,6 +20,9 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
 
+  flyway:
+    enabled: true
+
 azure:
   ad:
     "2281":
