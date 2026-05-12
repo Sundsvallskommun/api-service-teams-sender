@@ -13,15 +13,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
-import se.sundsvall.teamssender.service.TokenService;
+import se.sundsvall.teamssender.integration.microsoftgraph.AzureAdTokenService;
 
 @RestController
 @RequestMapping("/api/teamssender")
 class AuthResource {
 
-	private final TokenService tokenService;
+	private final AzureAdTokenService tokenService;
 
-	public AuthResource(final TokenService tokenService) {
+	public AuthResource(final AzureAdTokenService tokenService) {
 		this.tokenService = tokenService;
 	}
 

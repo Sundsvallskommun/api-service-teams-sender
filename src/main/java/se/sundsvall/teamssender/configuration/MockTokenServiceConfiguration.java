@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import se.sundsvall.teamssender.integration.db.TokenCacheRepository;
-import se.sundsvall.teamssender.service.StaticTokenCredential;
-import se.sundsvall.teamssender.service.TokenService;
+import se.sundsvall.teamssender.integration.microsoftgraph.AzureAdTokenService;
+import se.sundsvall.teamssender.integration.microsoftgraph.StaticTokenCredential;
 
 @Configuration
 @Profile("mock")
@@ -21,28 +21,30 @@ public class MockTokenServiceConfiguration {
 
 	@Bean
 	@Primary
-	public TokenService mockTokenService(AzureConfig azureConfig, TokenCacheRepository tokenCacheRepository) {
+	public AzureAdTokenService mockTokenService(final AzureConfig azureConfig, final TokenCacheRepository tokenCacheRepository) {
 
-		return new TokenService(azureConfig, tokenCacheRepository) {
+		return new AzureAdTokenService(azureConfig, tokenCacheRepository) {
 
 			@Override
-			public String getAccessTokenForUser(String municipalityId) {
+			public String getAccessTokenForUser(final String municipalityId) {
 				return "mock-access-token";
 			}
 
 			@Override
-			public ResponseEntity<String> exchangeAuthCodeForToken(String code, String municipalityId) {
+			public ResponseEntity<String> exchangeAuthCodeForToken(final String code, final String municipalityId) {
 				return ResponseEntity.ok("mock-token-success");
 			}
 
 			@Override
-			public GraphServiceClient initializeGraphServiceClient(String municipalityId) {
-				TokenCredential credential = new StaticTokenCredential("mock-access-token");
-				GraphServiceClient client = new GraphServiceClient(credential);
+			public GraphServiceClient initializeGraphServiceClient(final String municipalityId) {
+				final TokenCredential credential = new StaticTokenCredential("mock-access-token");
+				final GraphServiceClient client = new GraphServiceClient(credential);
 
 				try {
 					client.getRequestAdapter().setBaseUrl(graphBaseUrl);
-				} catch (Exception ignored) {}
+				} catch (final Exception ignored) {
+					// keep the SDK default base url
+				}
 
 				return client;
 			}

@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.service;
+package se.sundsvall.teamssender.integration.microsoftgraph;
 
 import com.azure.core.credential.TokenCredential;
 import com.microsoft.aad.msal4j.AuthorizationCodeParameters;
@@ -25,13 +25,13 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
-public class TokenService {
+public class AzureAdTokenService {
 
 	private final AzureConfig multiConfig;
 
 	private final TokenCacheRepository tokenCacheRepository;
 
-	public TokenService(final AzureConfig azureConfig, final TokenCacheRepository tokenCacheRepository) {
+	public AzureAdTokenService(final AzureConfig azureConfig, final TokenCacheRepository tokenCacheRepository) {
 		this.multiConfig = azureConfig;
 		this.tokenCacheRepository = tokenCacheRepository;
 	}
