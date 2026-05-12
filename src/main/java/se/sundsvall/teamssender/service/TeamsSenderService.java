@@ -8,13 +8,12 @@ import com.microsoft.graph.models.ConversationMember;
 import com.microsoft.graph.models.ItemBody;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import se.sundsvall.dept44.problem.Problem;
-import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
@@ -34,28 +33,28 @@ public class TeamsSenderService {
 		final GraphServiceClient graphClient = tokenService.initializeGraphServiceClient(municipalityId);
 
 		final User sender = resolveSender(graphClient);
+		final Chat chat = createChat(graphClient, sender.getUserPrincipalName(), request.getRecipient());
 
-		final Chat createdChat = createChat(graphClient, sender.getUserPrincipalName(), request.getRecipient());
+		final String chatId = Optional.ofNullable(chat.getId())
+			.orElseThrow(() -> Problem.valueOf(UNPROCESSABLE_ENTITY, "Microsoft Graph returned a chat without an id"));
 		final ChatMessage chatMessage = createMessage(request.getMessage());
 
 		try {
-			graphClient.chats()
-				.byChatId(Objects.requireNonNull(createdChat.getId(), "Created Teams chat is missing an id"))
-				.messages()
-				.post(chatMessage);
-		} catch (final ThrowableProblem e) {
-			throw e;
+			graphClient.chats().byChatId(chatId).messages().post(chatMessage);
 		} catch (final Exception e) {
 			throw Problem.valueOf(UNPROCESSABLE_ENTITY, "Failed to post the Teams message: " + e.getMessage());
 		}
 	}
 
 	private User resolveSender(final GraphServiceClient graphClient) {
+		final User sender;
 		try {
-			return Objects.requireNonNull(graphClient.me().get(), "Could not resolve the authenticated sender");
+			sender = graphClient.me().get();
 		} catch (final Exception e) {
 			throw Problem.valueOf(BAD_GATEWAY, "Failed to resolve the authenticated sender from Microsoft Graph: " + e.getMessage());
 		}
+		return Optional.ofNullable(sender)
+			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Microsoft Graph did not return the authenticated sender"));
 	}
 
 	private Chat createChat(final GraphServiceClient graphClient, final String senderId, final String recipientId) {
@@ -67,13 +66,14 @@ public class TeamsSenderService {
 		members.add(createMember(graphClient, recipientId));
 		chat.setMembers(members);
 
+		final Chat createdChat;
 		try {
-			return Objects.requireNonNull(graphClient.chats().post(chat), "Microsoft Graph returned no chat");
-		} catch (final ThrowableProblem e) {
-			throw e;
+			createdChat = graphClient.chats().post(chat);
 		} catch (final Exception e) {
 			throw Problem.valueOf(UNPROCESSABLE_ENTITY, "Failed to create the Teams chat: " + e.getMessage());
 		}
+		return Optional.ofNullable(createdChat)
+			.orElseThrow(() -> Problem.valueOf(UNPROCESSABLE_ENTITY, "Microsoft Graph returned no chat"));
 	}
 
 	private ChatMessage createMessage(final String message) {
@@ -89,18 +89,17 @@ public class TeamsSenderService {
 	private AadUserConversationMember createMember(final GraphServiceClient graphClient, final String userEmail) {
 		final User user;
 		try {
-			user = Objects.requireNonNull(graphClient.users().byUserId(userEmail).get(), "No matching user");
+			user = graphClient.users().byUserId(userEmail).get();
 		} catch (final Exception e) {
 			throw Problem.valueOf(NOT_FOUND, "Teams user '%s' could not be found: %s".formatted(userEmail, e.getMessage()));
 		}
+		final String userId = Optional.ofNullable(user).map(User::getId)
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "Teams user '%s' could not be found".formatted(userEmail)));
 
 		final AadUserConversationMember member = new AadUserConversationMember();
 		member.setOdataType("#microsoft.graph.aadUserConversationMember");
 		member.setRoles(List.of("owner"));
-
-		final HashMap<String, Object> additionalData = new HashMap<>();
-		additionalData.put("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + Objects.requireNonNull(user.getId()) + "')");
-		member.setAdditionalData(additionalData);
+		member.setAdditionalData(Map.of("user@odata.bind", "https://graph.microsoft.com/v1.0/users('" + userId + "')"));
 
 		return member;
 	}
