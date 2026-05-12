@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
-import se.sundsvall.teamssender.auth.service.TokenService;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;

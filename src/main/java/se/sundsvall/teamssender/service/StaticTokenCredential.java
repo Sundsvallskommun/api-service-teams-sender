@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.auth.integration;
+package se.sundsvall.teamssender.service;
 
 import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;

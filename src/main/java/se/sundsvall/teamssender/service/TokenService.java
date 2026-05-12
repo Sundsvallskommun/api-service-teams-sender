@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.auth.service;
+package se.sundsvall.teamssender.service;
 
 import com.azure.core.credential.TokenCredential;
 import com.microsoft.aad.msal4j.AuthorizationCodeParameters;
@@ -16,10 +16,9 @@ import java.util.Set;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import se.sundsvall.dept44.problem.Problem;
-import se.sundsvall.teamssender.auth.integration.DatabaseTokenCache;
-import se.sundsvall.teamssender.auth.integration.StaticTokenCredential;
-import se.sundsvall.teamssender.auth.repository.ITokenCacheRepository;
 import se.sundsvall.teamssender.configuration.AzureConfig;
+import se.sundsvall.teamssender.integration.db.DatabaseTokenCache;
+import se.sundsvall.teamssender.integration.db.TokenCacheRepository;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -30,9 +29,9 @@ public class TokenService {
 
 	private final AzureConfig multiConfig;
 
-	private final ITokenCacheRepository tokenCacheRepository;
+	private final TokenCacheRepository tokenCacheRepository;
 
-	public TokenService(final AzureConfig azureConfig, final ITokenCacheRepository tokenCacheRepository) {
+	public TokenService(final AzureConfig azureConfig, final TokenCacheRepository tokenCacheRepository) {
 		this.multiConfig = azureConfig;
 		this.tokenCacheRepository = tokenCacheRepository;
 	}

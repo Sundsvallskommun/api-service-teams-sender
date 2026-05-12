@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.auth;
+package se.sundsvall.teamssender.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
-import se.sundsvall.teamssender.auth.service.TokenService;
+import se.sundsvall.teamssender.service.TokenService;
 
 @RestController
 @RequestMapping("/api/teamssender")

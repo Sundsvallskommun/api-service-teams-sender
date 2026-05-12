@@ -8,9 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
-import se.sundsvall.teamssender.auth.integration.StaticTokenCredential;
-import se.sundsvall.teamssender.auth.repository.ITokenCacheRepository;
-import se.sundsvall.teamssender.auth.service.TokenService;
+import se.sundsvall.teamssender.integration.db.TokenCacheRepository;
+import se.sundsvall.teamssender.service.StaticTokenCredential;
+import se.sundsvall.teamssender.service.TokenService;
 
 @Configuration
 @Profile("mock")
@@ -21,7 +21,7 @@ public class MockTokenServiceConfiguration {
 
 	@Bean
 	@Primary
-	public TokenService mockTokenService(AzureConfig azureConfig, ITokenCacheRepository tokenCacheRepository) {
+	public TokenService mockTokenService(AzureConfig azureConfig, TokenCacheRepository tokenCacheRepository) {
 
 		return new TokenService(azureConfig, tokenCacheRepository) {
 

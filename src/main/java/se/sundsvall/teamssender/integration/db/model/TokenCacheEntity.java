@@ -1,4 +1,4 @@
-package se.sundsvall.teamssender.auth.model;
+package se.sundsvall.teamssender.integration.db.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
