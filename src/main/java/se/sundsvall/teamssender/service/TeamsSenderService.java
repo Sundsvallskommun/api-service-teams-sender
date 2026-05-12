@@ -18,7 +18,7 @@ import se.sundsvall.teamssender.api.model.SendTeamsMessageRequest;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
 @Service
 public class TeamsSenderService {
@@ -32,17 +32,19 @@ public class TeamsSenderService {
 	public void sendTeamsMessage(final SendTeamsMessageRequest request, final String municipalityId) {
 		final GraphServiceClient graphClient = tokenService.initializeGraphServiceClient(municipalityId);
 
-		final User sender = resolveSender(graphClient);
-		final Chat chat = createChat(graphClient, sender.getUserPrincipalName(), request.getRecipient());
+		final String senderId = Optional.ofNullable(resolveSender(graphClient).getId())
+			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Microsoft Graph returned the authenticated sender without an id"));
+
+		final Chat chat = createChat(graphClient, senderId, request.getRecipient());
 
 		final String chatId = Optional.ofNullable(chat.getId())
-			.orElseThrow(() -> Problem.valueOf(UNPROCESSABLE_ENTITY, "Microsoft Graph returned a chat without an id"));
+			.orElseThrow(() -> Problem.valueOf(UNPROCESSABLE_CONTENT, "Microsoft Graph returned a chat without an id"));
 		final ChatMessage chatMessage = createMessage(request.getMessage());
 
 		try {
 			graphClient.chats().byChatId(chatId).messages().post(chatMessage);
 		} catch (final Exception e) {
-			throw Problem.valueOf(UNPROCESSABLE_ENTITY, "Failed to post the Teams message: " + e.getMessage());
+			throw Problem.valueOf(UNPROCESSABLE_CONTENT, "Failed to post the Teams message: " + e.getMessage());
 		}
 	}
 
@@ -57,23 +59,34 @@ public class TeamsSenderService {
 			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Microsoft Graph did not return the authenticated sender"));
 	}
 
-	private Chat createChat(final GraphServiceClient graphClient, final String senderId, final String recipientId) {
+	private Chat createChat(final GraphServiceClient graphClient, final String senderId, final String recipient) {
 		final Chat chat = new Chat();
 		chat.setChatType(ChatType.OneOnOne);
 
 		final LinkedList<ConversationMember> members = new LinkedList<>();
-		members.add(createMember(graphClient, senderId));
-		members.add(createMember(graphClient, recipientId));
+		members.add(asMember(senderId));
+		members.add(asMember(resolveRecipientId(graphClient, recipient)));
 		chat.setMembers(members);
 
 		final Chat createdChat;
 		try {
 			createdChat = graphClient.chats().post(chat);
 		} catch (final Exception e) {
-			throw Problem.valueOf(UNPROCESSABLE_ENTITY, "Failed to create the Teams chat: " + e.getMessage());
+			throw Problem.valueOf(UNPROCESSABLE_CONTENT, "Failed to create the Teams chat: " + e.getMessage());
 		}
 		return Optional.ofNullable(createdChat)
-			.orElseThrow(() -> Problem.valueOf(UNPROCESSABLE_ENTITY, "Microsoft Graph returned no chat"));
+			.orElseThrow(() -> Problem.valueOf(UNPROCESSABLE_CONTENT, "Microsoft Graph returned no chat"));
+	}
+
+	private String resolveRecipientId(final GraphServiceClient graphClient, final String recipient) {
+		final User user;
+		try {
+			user = graphClient.users().byUserId(recipient).get();
+		} catch (final Exception e) {
+			throw Problem.valueOf(NOT_FOUND, "Teams user '%s' could not be found: %s".formatted(recipient, e.getMessage()));
+		}
+		return Optional.ofNullable(user).map(User::getId)
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "Teams user '%s' could not be found".formatted(recipient)));
 	}
 
 	private ChatMessage createMessage(final String message) {
@@ -86,16 +99,7 @@ public class TeamsSenderService {
 		return chatMessage;
 	}
 
-	private AadUserConversationMember createMember(final GraphServiceClient graphClient, final String userEmail) {
-		final User user;
-		try {
-			user = graphClient.users().byUserId(userEmail).get();
-		} catch (final Exception e) {
-			throw Problem.valueOf(NOT_FOUND, "Teams user '%s' could not be found: %s".formatted(userEmail, e.getMessage()));
-		}
-		final String userId = Optional.ofNullable(user).map(User::getId)
-			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "Teams user '%s' could not be found".formatted(userEmail)));
-
+	private static AadUserConversationMember asMember(final String userId) {
 		final AadUserConversationMember member = new AadUserConversationMember();
 		member.setOdataType("#microsoft.graph.aadUserConversationMember");
 		member.setRoles(List.of("owner"));
