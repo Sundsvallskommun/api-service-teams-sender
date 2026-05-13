@@ -30,7 +30,7 @@ public class DatabaseTokenCache implements ITokenCacheAccessAspect {
 		if (context.hasCacheChanged()) {
 			final String serializedCache = context.tokenCache().serialize();
 			final byte[] cacheData = serializedCache.getBytes(StandardCharsets.UTF_8);
-			tokenCacheRepository.save(new TokenCacheEntity(userId, cacheData));
+			tokenCacheRepository.save(TokenCacheEntity.create().withUserId(userId).withCacheData(cacheData));
 		}
 	}
 }

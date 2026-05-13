@@ -15,11 +15,8 @@ public class SendTeamsMessageRequest {
 	@Schema(description = "The content of the message", examples = "Don't forget the meeting at 3 PM")
 	private String message;
 
-	public SendTeamsMessageRequest() {}
-
-	public SendTeamsMessageRequest(final String recipient, final String message) {
-		this.recipient = recipient;
-		this.message = message;
+	public static SendTeamsMessageRequest create() {
+		return new SendTeamsMessageRequest();
 	}
 
 	public String getRecipient() {
@@ -30,6 +27,11 @@ public class SendTeamsMessageRequest {
 		this.recipient = recipient;
 	}
 
+	public SendTeamsMessageRequest withRecipient(final String recipient) {
+		this.recipient = recipient;
+		return this;
+	}
+
 	public String getMessage() {
 		return message;
 	}
@@ -38,14 +40,17 @@ public class SendTeamsMessageRequest {
 		this.message = message;
 	}
 
+	public SendTeamsMessageRequest withMessage(final String message) {
+		this.message = message;
+		return this;
+	}
+
 	@Override
 	public boolean equals(final Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (!(o instanceof final SendTeamsMessageRequest that)) {
+		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
+		final SendTeamsMessageRequest that = (SendTeamsMessageRequest) o;
 		return Objects.equals(recipient, that.recipient) && Objects.equals(message, that.message);
 	}
 
@@ -56,6 +61,9 @@ public class SendTeamsMessageRequest {
 
 	@Override
 	public String toString() {
-		return "SendTeamsMessageRequest{recipient='" + recipient + "', message='" + message + "'}";
+		return "SendTeamsMessageRequest{" +
+			"recipient='" + recipient + '\'' +
+			", message='" + message + '\'' +
+			'}';
 	}
 }
