@@ -1,0 +1,15 @@
+{
+	"request": {
+		"method": "POST",
+		"urlPathPattern": "/graph/chats/.+/messages"
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"id": "message-id-1"
+		}
+	}
+}

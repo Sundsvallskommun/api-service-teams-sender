@@ -13,7 +13,9 @@ import se.sundsvall.teamssender.integration.microsoftgraph.AzureAdTokenService;
 import se.sundsvall.teamssender.integration.microsoftgraph.StaticTokenCredential;
 
 @Configuration
-@Profile("mock")
+@Profile({
+	"mock", "it"
+})
 public class MockAzureAdTokenServiceConfiguration {
 
 	@Value("${graph.base-url}")

@@ -1,0 +1,16 @@
+{
+	"request": {
+		"method": "GET",
+		"urlPath": "/graph/me"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"id": "sender-id-1",
+			"userPrincipalName": "sender@example.com"
+		}
+	}
+}

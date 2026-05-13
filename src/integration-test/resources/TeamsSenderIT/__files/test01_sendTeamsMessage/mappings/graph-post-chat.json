@@ -1,0 +1,15 @@
+{
+	"request": {
+		"method": "POST",
+		"urlPath": "/graph/chats"
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"id": "chat-id-1"
+		}
+	}
+}
