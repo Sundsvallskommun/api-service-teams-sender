@@ -27,13 +27,14 @@ spring:
 azure:
   ad:
     "2281":
-      user: user
-      clientId: client-id
-      tenantId: tenant-id
-      clientSecret: client-secret
-      authorityUrl: https://login.microsoftonline.com
-      redirectUri: http://localhost:8080/callback
-      loginUrl: https://login.microsoftonline.com
+      user: ${AZURE_USER}
+      clientId: ${AZURE_CLIENT_ID}
+      tenantId: ${AZURE_TENANT_ID}
+      clientSecret: ${AZURE_CLIENT_SECRET}
+      authorityUrl: ${AZURE_AUTHORITY_URL}
+      redirectUri: ${AZURE_REDIRECT_URI}
+      loginUrl: ${AZURE_LOGIN_URL}
+      scopes: ${AZURE_SCOPES}
 
 graph:
   base-url: https://graph.microsoft.com/v1.0
