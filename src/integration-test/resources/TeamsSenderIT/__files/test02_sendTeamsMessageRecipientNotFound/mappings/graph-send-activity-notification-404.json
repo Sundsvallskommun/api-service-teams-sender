@@ -1,0 +1,18 @@
+{
+	"request": {
+		"method": "POST",
+		"urlPathPattern": "/graph/users/.+/teamwork/sendActivityNotification"
+	},
+	"response": {
+		"status": 404,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"error": {
+				"code": "Request_ResourceNotFound",
+				"message": "Resource 'missing-user@example.com' does not exist or one of its queried reference-property objects are not present."
+			}
+		}
+	}
+}

@@ -1,38 +1,25 @@
 #========================================
 # Test profile settings (IT tests)
 # Booted by @WireMockAppTestSuite and OpenApiSpecificationIT under the
-# "it" profile. The MockAzureAdTokenServiceConfiguration is also active
-# on this profile, so MSAL/Azure calls are stubbed; only the Graph SDK
-# is exercised end-to-end (against WireMock).
+# "it" profile. teams.graph-base-url redirects Graph calls to WireMock;
+# the Azure credentials below are throwaway values so the
+# ClientSecretCredential builds, but no real OAuth call is made when the
+# Graph base URL is overridden.
 #========================================
-spring:
-  datasource:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    url: jdbc:tc:mariadb:10.6:///
-  flyway:
-    enabled: true
-  jpa:
-    properties:
-      jakarta:
-        persistence:
-          schema-generation:
-            database:
-              action: validate
-
 azure:
   ad:
     "2281":
-      user: it-user
+      tenantId: it-tenant
       clientId: it-client-id
-      tenantId: it-tenant-id
       clientSecret: it-secret
-      authorityUrl: http://localhost:${wiremock.server.port}/azure
-      redirectUri: http://localhost/callback
-      scopes: https://graph.microsoft.com/.default
-      loginUrl: http://localhost:${wiremock.server.port}/azure/login
 
-graph:
-  base-url: http://localhost:${wiremock.server.port}/graph
+teams:
+  scope: https://graph.microsoft.com/.default
+  graph-base-url: http://localhost:${wiremock.server.port}/graph
+  default-target-url: https://status.example.invalid
+  activity-type: systemDefault
+  topic-label: IT-Notification
+  static-access-token: it-fake-bearer-token
 
 logging:
   level:

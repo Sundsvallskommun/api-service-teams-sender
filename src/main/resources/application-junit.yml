@@ -1,6 +1,21 @@
 #========================================
 # Test profile settings (junit tests)
+# Used by @SpringBootTest-based resource tests. Provides throwaway Azure
+# credentials so the GraphServiceClientFactory's lazy ClientSecretCredential
+# build (when a test happens to touch it) doesn't fail. No DB / Flyway
+# needed - the service has no persistence layer anymore.
 #========================================
+azure:
+  ad:
+    "2281":
+      tenantId: junit-tenant
+      clientId: junit-client-id
+      clientSecret: junit-secret
+
+teams:
+  scope: https://graph.microsoft.com/.default
+  default-target-url: https://status.example.invalid
+
 logging:
   level:
-    root: DEBUG
+    root: WARN

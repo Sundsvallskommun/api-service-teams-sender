@@ -35,9 +35,9 @@ class TeamsSenderResource {
 			@ApiResponse(responseCode = "400", description = "Incorrect or malformed request", content = @Content(schema = @Schema(oneOf = {
 				Problem.class, ConstraintViolationProblem.class
 			}))),
-			@ApiResponse(responseCode = "404", description = "Requested resource could not be found", content = @Content(schema = @Schema(implementation = Problem.class))),
-			@ApiResponse(responseCode = "422", description = "Message could not be created or sent", content = @Content(schema = @Schema(implementation = Problem.class))),
-			@ApiResponse(responseCode = "401", description = "Authentication information is either missing or invalid", content = @Content(schema = @Schema(implementation = Problem.class))),
+			@ApiResponse(responseCode = "404", description = "Recipient not found in Microsoft Graph", content = @Content(schema = @Schema(implementation = Problem.class))),
+			@ApiResponse(responseCode = "401", description = "Microsoft Graph rejected the credentials", content = @Content(schema = @Schema(implementation = Problem.class))),
+			@ApiResponse(responseCode = "403", description = "Microsoft Graph rejected the request (missing permission or activity type not registered)", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "502", description = "Bad gateway when communicating with Microsoft Graph", content = @Content(schema = @Schema(implementation = Problem.class))),
 			@ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(schema = @Schema(implementation = Problem.class)))
 		})

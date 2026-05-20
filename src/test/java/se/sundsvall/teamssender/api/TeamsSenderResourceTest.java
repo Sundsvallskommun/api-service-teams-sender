@@ -15,6 +15,7 @@ import se.sundsvall.teamssender.service.TeamsSenderService;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static se.sundsvall.teamssender.api.model.SendTeamsMessageRequest.MESSAGE_TYPE_NOTIFICATION;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -33,8 +34,10 @@ class TeamsSenderResourceTest {
 	@Test
 	void sendTeamsMessage() {
 		final var request = SendTeamsMessageRequest.create()
+			.withMessageType(MESSAGE_TYPE_NOTIFICATION)
 			.withRecipient("recipient@example.com")
-			.withMessage("Hello, world!");
+			.withMessage("Hello, world!")
+			.withTargetUrl("https://status.example.com/123");
 
 		webTestClient.post()
 			.uri(builder -> builder.path(PATH).build(Map.of("municipalityId", MUNICIPALITY_ID)))

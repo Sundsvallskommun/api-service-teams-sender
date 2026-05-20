@@ -14,27 +14,31 @@ spring:
   application:
     name: teamssender
 
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.mariadb.jdbc.Driver
-
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-
+#----------------------------------------
+# Per-municipality Azure AD app credentials (OAuth2 client credentials).
+# The app must have the TeamsActivity.Send application permission with
+# tenant-admin consent.
+#----------------------------------------
 azure:
   ad:
     "2281":
-      user: ${AZURE_USER}
-      clientId: ${AZURE_CLIENT_ID}
       tenantId: ${AZURE_TENANT_ID}
+      clientId: ${AZURE_CLIENT_ID}
       clientSecret: ${AZURE_CLIENT_SECRET}
-      authorityUrl: ${AZURE_AUTHORITY_URL}
-      redirectUri: ${AZURE_REDIRECT_URI}
-      loginUrl: ${AZURE_LOGIN_URL}
-      scopes: ${AZURE_SCOPES}
 
-graph:
-  base-url: https://graph.microsoft.com/v1.0
+#----------------------------------------
+# Service-wide Teams notification settings.
+# - scope: Graph application scope (almost always .default).
+# - default-target-url: clickable target for notifications when a request
+#   doesn't supply targetUrl.
+# - activity-type: must match an activity type registered in the tenant's
+#   Teams app manifest. "systemDefault" works in many tenants; coordinate
+#   with the Azure admin (see TODO.md).
+# - topic-label: short title shown above the previewText in the activity
+#   feed entry.
+#----------------------------------------
+teams:
+  scope: https://graph.microsoft.com/.default
+  default-target-url: ${TEAMS_DEFAULT_TARGET_URL:https://www.sundsvall.se}
+  activity-type: ${TEAMS_ACTIVITY_TYPE:systemDefault}
+  topic-label: ${TEAMS_TOPIC_LABEL:Notification}

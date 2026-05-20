@@ -1,4 +1,6 @@
 {
-	"recipient": "recipient-id-1",
-	"message": "Hello from integration test"
+	"messageType": "NOTIFICATION",
+	"recipient": "recipient@example.com",
+	"message": "Datacenter A is offline",
+	"targetUrl": "https://status.example.com/incidents/123"
 }

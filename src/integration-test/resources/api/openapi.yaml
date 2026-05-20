@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.0"
 servers:
-- url: http://localhost:61428
+- url: http://localhost:58754
   description: Generated server url
 paths:
   /{municipalityId}/teams/messages:
@@ -42,19 +42,20 @@ paths:
                 - $ref: "#/components/schemas/Problem"
                 - $ref: "#/components/schemas/ConstraintViolationProblem"
         "404":
-          description: Requested resource could not be found
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "422":
-          description: Message could not be created or sent
+          description: Recipient not found in Microsoft Graph
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/Problem"
         "401":
-          description: Authentication information is either missing or invalid
+          description: Microsoft Graph rejected the credentials
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "403":
+          description: Microsoft Graph rejected the request (missing permission or
+            activity type not registered)
           content:
             '*/*':
               schema:
@@ -71,38 +72,6 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/Problem"
-  /api/teamssender/{municipalityId}/login:
-    get:
-      tags:
-      - auth-resource
-      summary: Login for user in a specific municipality
-      description: Redirects the user to Microsoft loginpage
-      operationId: login
-      parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality id
-        required: true
-        schema:
-          type: string
-        example: 2281
-      responses:
-        "302":
-          description: Redirects the user to Microsoft loginpage
-        "404":
-          description: Invalid municipality ID
-  /api/teamssender/callback:
-    get:
-      tags:
-      - auth-resource
-      operationId: callback
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: string
   /api-docs:
     get:
       tags:
@@ -187,19 +156,38 @@ components:
       type: object
       description: Request model for sending a Teams message
       properties:
+        messageType:
+          type: string
+          description: Kind of Teams message to send. Currently only NOTIFICATION
+            (bell-icon activity notification) is supported.
+          enum:
+          - NOTIFICATION
+          examples:
+          - NOTIFICATION
+          minLength: 1
         recipient:
           type: string
-          description: The user ID or email to send the message to
+          format: email
+          description: The recipient's UPN / email address
           examples:
           - first.last@municipaladress.com
           minLength: 1
         message:
           type: string
-          description: The content of the message
+          description: Notification preview text (Teams enforces a 150 character limit
+            on the preview).
           examples:
-          - Don't forget the meeting at 3 PM
-          minLength: 1
+          - Datacenter A is offline
+          maxLength: 150
+          minLength: 0
+        targetUrl:
+          type: string
+          description: Optional clickable target URL for the notification. Falls back
+            to the service-wide default (teams.default-target-url) if omitted.
+          examples:
+          - https://status.sundsvall.se/incidents/123
       required:
       - message
+      - messageType
       - recipient
   securitySchemes: {}

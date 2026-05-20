@@ -4,6 +4,10 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Per-municipality Azure AD app registration credentials. The service uses OAuth2 client credentials (no user login),
+ * so only the three values needed to acquire an application access token are kept.
+ */
 @Configuration
 @ConfigurationProperties(prefix = "azure")
 public class AzureConfig {
@@ -19,21 +23,16 @@ public class AzureConfig {
 	}
 
 	public static class Azure {
-		private String user;
-		private String clientId;
 		private String tenantId;
-		private String redirectUri;
-		private String scopes;
-		private String authorityUrl;
+		private String clientId;
 		private String clientSecret;
-		private String loginUrl;
 
-		public String getUser() {
-			return user;
+		public String getTenantId() {
+			return tenantId;
 		}
 
-		public void setUser(final String user) {
-			this.user = user;
+		public void setTenantId(final String tenantId) {
+			this.tenantId = tenantId;
 		}
 
 		public String getClientId() {
@@ -44,52 +43,12 @@ public class AzureConfig {
 			this.clientId = clientId;
 		}
 
-		public String getTenantId() {
-			return tenantId;
-		}
-
-		public void setTenantId(final String tenantId) {
-			this.tenantId = tenantId;
-		}
-
-		public String getRedirectUri() {
-			return redirectUri;
-		}
-
-		public void setRedirectUri(final String redirectUri) {
-			this.redirectUri = redirectUri;
-		}
-
-		public String getScopes() {
-			return scopes;
-		}
-
-		public void setScopes(final String scopes) {
-			this.scopes = scopes;
-		}
-
-		public String getAuthorityUrl() {
-			return authorityUrl;
-		}
-
-		public void setAuthorityUrl(final String authorityUrl) {
-			this.authorityUrl = authorityUrl;
-		}
-
 		public String getClientSecret() {
 			return clientSecret;
 		}
 
 		public void setClientSecret(final String clientSecret) {
 			this.clientSecret = clientSecret;
-		}
-
-		public String getLoginUrl() {
-			return loginUrl;
-		}
-
-		public void setLoginUrl(final String loginUrl) {
-			this.loginUrl = loginUrl;
 		}
 	}
 }

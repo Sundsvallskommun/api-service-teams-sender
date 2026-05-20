@@ -1,7 +1,6 @@
 package se.sundsvall.teamssender.apptest;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.jdbc.Sql;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.teamssender.Application;
@@ -11,10 +10,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 @WireMockAppTestSuite(files = "classpath:/TeamsSenderIT/", classes = Application.class)
-@Sql(scripts = {
-	"/db/scripts/truncate.sql",
-	"/db/scripts/testdata-it.sql"
-})
 class TeamsSenderIT extends AbstractAppTest {
 
 	private static final String REQUEST_FILE = "request.json";

@@ -22,8 +22,14 @@ class AzureConfigTest {
 	void azureConfigGetterAndSetter() {
 		final var config = new AzureConfig();
 		final var azure = new AzureConfig.Azure();
+		azure.setTenantId("tenant");
+		azure.setClientId("client");
+		azure.setClientSecret("secret");
 		config.setAd(Map.of("2281", azure));
 
 		assertThat(config.getAd()).containsEntry("2281", azure);
+		assertThat(azure.getTenantId()).isEqualTo("tenant");
+		assertThat(azure.getClientId()).isEqualTo("client");
+		assertThat(azure.getClientSecret()).isEqualTo("secret");
 	}
 }

@@ -1,6 +1,7 @@
 package se.sundsvall.teamssender.api;
 
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static se.sundsvall.teamssender.api.model.SendTeamsMessageRequest.MESSAGE_TYPE_NOTIFICATION;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -36,51 +38,77 @@ class TeamsSenderResourceFailureTest {
 	private WebTestClient webTestClient;
 
 	@Test
-	void sendTeamsMessageWithInvalidMunicipalityId() {
-		final var request = SendTeamsMessageRequest.create()
-			.withRecipient("recipient@example.com")
-			.withMessage("Hello, world!");
-
-		final var problem = post(INVALID_MUNICIPALITY_ID, request);
+	void invalidMunicipalityId() {
+		final var problem = post(INVALID_MUNICIPALITY_ID, validRequest(r -> r));
 
 		assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(problem.getViolations())
 			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("sendTeamsMessage.municipalityId", "not a valid municipality ID"));
-
 		verifyNoInteractions(serviceMock);
 	}
 
 	@Test
-	void sendTeamsMessageWithBlankRecipient() {
-		final var request = SendTeamsMessageRequest.create()
-			.withRecipient(" ")
-			.withMessage("Hello, world!");
-
-		final var problem = post(VALID_MUNICIPALITY_ID, request);
+	void unsupportedMessageType() {
+		final var problem = post(VALID_MUNICIPALITY_ID, validRequest(r -> r.withMessageType("CHAT")));
 
 		assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(problem.getViolations())
 			.extracting(Violation::field, Violation::message)
-			.containsExactly(tuple("recipient", "must not be blank"));
-
+			.containsExactly(tuple("messageType", "must be one of: [NOTIFICATION]"));
 		verifyNoInteractions(serviceMock);
 	}
 
 	@Test
-	void sendTeamsMessageWithBlankMessage() {
-		final var request = SendTeamsMessageRequest.create()
-			.withRecipient("recipient@example.com")
-			.withMessage(" ");
+	void invalidRecipientEmail() {
+		final var problem = post(VALID_MUNICIPALITY_ID, validRequest(r -> r.withRecipient("not-an-email")));
 
-		final var problem = post(VALID_MUNICIPALITY_ID, request);
+		assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(problem.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("recipient", "must be a well-formed email address"));
+		verifyNoInteractions(serviceMock);
+	}
+
+	@Test
+	void blankMessage() {
+		final var problem = post(VALID_MUNICIPALITY_ID, validRequest(r -> r.withMessage(" ")));
 
 		assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(problem.getViolations())
 			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("message", "must not be blank"));
-
 		verifyNoInteractions(serviceMock);
+	}
+
+	@Test
+	void oversizeMessage() {
+		final var problem = post(VALID_MUNICIPALITY_ID, validRequest(r -> r.withMessage("x".repeat(151))));
+
+		assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(problem.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("message", "size must be between 0 and 150"));
+		verifyNoInteractions(serviceMock);
+	}
+
+	@Test
+	void invalidTargetUrl() {
+		final var problem = post(VALID_MUNICIPALITY_ID, validRequest(r -> r.withTargetUrl("not-a-url")));
+
+		assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(problem.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("targetUrl", "must be a valid URL"));
+		verifyNoInteractions(serviceMock);
+	}
+
+	private static SendTeamsMessageRequest validRequest(final UnaryOperator<SendTeamsMessageRequest> tweak) {
+		return tweak.apply(SendTeamsMessageRequest.create()
+			.withMessageType(MESSAGE_TYPE_NOTIFICATION)
+			.withRecipient("recipient@example.com")
+			.withMessage("Hello, world!")
+			.withTargetUrl("https://status.example.com/123"));
 	}
 
 	private ConstraintViolationProblem post(final String municipalityId, final SendTeamsMessageRequest request) {

@@ -10,6 +10,7 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetter
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static se.sundsvall.teamssender.api.model.SendTeamsMessageRequest.MESSAGE_TYPE_NOTIFICATION;
 
 class SendTeamsMessageRequestTest {
 
@@ -25,16 +26,22 @@ class SendTeamsMessageRequestTest {
 
 	@Test
 	void testBuilderMethods() {
+		final var messageType = MESSAGE_TYPE_NOTIFICATION;
 		final var recipient = "first.last@example.com";
 		final var message = "Hello, world!";
+		final var targetUrl = "https://status.example.com/123";
 
 		final var bean = SendTeamsMessageRequest.create()
+			.withMessageType(messageType)
 			.withRecipient(recipient)
-			.withMessage(message);
+			.withMessage(message)
+			.withTargetUrl(targetUrl);
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(bean.getMessageType()).isEqualTo(messageType);
 		assertThat(bean.getRecipient()).isEqualTo(recipient);
 		assertThat(bean.getMessage()).isEqualTo(message);
+		assertThat(bean.getTargetUrl()).isEqualTo(targetUrl);
 	}
 
 	@Test

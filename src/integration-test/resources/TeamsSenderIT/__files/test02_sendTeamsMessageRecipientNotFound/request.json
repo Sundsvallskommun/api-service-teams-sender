@@ -1,4 +1,6 @@
 {
-	"recipient": "missing-user-id",
-	"message": "Hello from integration test"
+	"messageType": "NOTIFICATION",
+	"recipient": "missing-user@example.com",
+	"message": "Datacenter A is offline",
+	"targetUrl": "https://status.example.com/incidents/123"
 }
