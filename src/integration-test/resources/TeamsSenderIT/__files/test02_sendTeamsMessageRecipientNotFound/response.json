@@ -1,0 +1,5 @@
+{
+	"title": "Not Found",
+	"status": 404,
+	"detail": "${json-unit.regex}^Teams user 'missing-user-id' could not be found.*"
+}
