@@ -1,0 +1,244 @@
+openapi: 3.1.0
+info:
+  title: teamssender
+  contact: {}
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  version: "2.0"
+servers:
+- url: http://localhost:51428
+  description: Generated server url
+paths:
+  /{municipalityId}/teams/messages:
+    post:
+      tags:
+      - teams-sender-resource
+      summary: Send a message in Microsoft Teams
+      operationId: sendTeamsMessage
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality id
+        required: true
+        schema:
+          type: string
+        example: 2281
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendTeamsMessageRequest"
+        required: true
+      responses:
+        "204":
+          description: Message sent successfully
+        "400":
+          description: Incorrect or malformed request
+          content:
+            '*/*':
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "404":
+          description: Requested resource could not be found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "422":
+          description: Message could not be created or sent
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Authentication information is either missing or invalid
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad gateway when communicating with Microsoft Graph
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Unexpected internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /api/teamssender/{municipalityId}/login:
+    get:
+      tags:
+      - auth-resource
+      summary: Login for user in a specific municipality
+      description: Redirects the user to Microsoft loginpage
+      operationId: login
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality id
+        required: true
+        schema:
+          type: string
+        example: 2281
+      responses:
+        "302":
+          description: Redirects the user to Microsoft loginpage
+        "404":
+          description: Invalid municipality ID
+  /api/teamssender/callback:
+    get:
+      tags:
+      - auth-resource
+      summary: OAuth2 redirect endpoint
+      description: Exchanges the authorization code issued by Azure AD for tokens
+        and persists them. This path is registered as the redirect URI in the Azure
+        app registration - do not rename it.
+      operationId: callback
+      parameters:
+      - name: code
+        in: query
+        description: Authorization code issued by Azure AD
+        required: true
+        schema:
+          type: string
+          minLength: 1
+      - name: state
+        in: query
+        description: "Municipality id, round-tripped via the OAuth2 state parameter"
+        required: true
+        schema:
+          type: string
+        example: 2281
+      responses:
+        "200":
+          description: Token successfully acquired and cached
+          content:
+            '*/*':
+              schema:
+                type: string
+        "400":
+          description: Missing or malformed code/state parameter
+          content:
+            '*/*':
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "401":
+          description: Azure AD rejected the authorization code
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Unknown municipality in the state parameter
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /api-docs:
+    get:
+      tags:
+      - API
+      summary: OpenAPI
+      operationId: getApiDocs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/yaml:
+              schema:
+                type: string
+      x-auth-type: None
+      x-throttling-tier: Unlimited
+      x-wso2-mutual-ssl: Optional
+components:
+  schemas:
+    Problem:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        type:
+          type: string
+          format: uri
+        status:
+          type: integer
+          format: int32
+    ConstraintViolationProblem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        status:
+          type: integer
+          format: int32
+        violations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Violation"
+        title:
+          type: string
+        detail:
+          type: string
+        causeAsProblem:
+          $ref: "#/components/schemas/ThrowableProblem"
+        instance:
+          type: string
+          format: uri
+    ThrowableProblem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        causeAsProblem: {}
+    Violation:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+    SendTeamsMessageRequest:
+      type: object
+      description: Request model for sending a Teams message
+      properties:
+        recipient:
+          type: string
+          description: The user ID or email to send the message to
+          examples:
+          - first.last@municipaladress.com
+          minLength: 1
+        message:
+          type: string
+          description: The content of the message
+          examples:
+          - Don't forget the meeting at 3 PM
+          minLength: 1
+      required:
+      - message
+      - recipient
+  securitySchemes: {}

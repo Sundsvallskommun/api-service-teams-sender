@@ -1,0 +1,21 @@
+#========================================
+# Test profile settings (junit tests)
+# Overrides for unit tests booting the full Spring context. H2 stands in
+# for MariaDB and Hibernate creates the schema; Flyway is bypassed since
+# its migrations target MariaDB-specific DDL.
+#========================================
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;MODE=MariaDB;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+logging:
+  level:
+    root: WARN

@@ -1,0 +1,16 @@
+{
+	"request": {
+		"method": "GET",
+		"urlPathPattern": "/graph/users/.+"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"id": "recipient-id-1",
+			"userPrincipalName": "recipient@example.com"
+		}
+	}
+}

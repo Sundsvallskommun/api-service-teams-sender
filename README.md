@@ -95,14 +95,19 @@ Configuration is crucial for the application to run successfully. Ensure all nec
 azure:
   ad:
     "2281":
-      user: user
+      user: sender.account@yourtenant.onmicrosoft.com   # UPN of the licensed sender account
       clientId: client-id
-      tenantId: tenant-id
       clientSecret: client-secret
-      authorityUrl: https://login.microsoftonline.com
-      redirectUri: http://localhost:8080/callback
-      loginUrl: https://login.microsoftonline.com/login 
+      authorityUrl: https://login.microsoftonline.com/<tenantId>/   # carries the tenant
+      redirectUri: http://localhost:8080/api/teamssender/callback   # must match the Azure app registration
+      scopes: https://graph.microsoft.com/Chat.ReadWrite https://graph.microsoft.com/User.ReadBasic.All   # delegated Graph scopes (chat create/send + recipient lookup)
+      loginUrl: <full Azure authorize URL, incl. state=2281 and the redirect URI>
 ```
+
+The service sends chat messages with **delegated** permissions: after deployment an
+operator performs a one-time browser login via `GET /api/teamssender/2281/login`
+as the configured sender account; the refresh token is then cached in the database
+and used silently. See `TODO.md` for the runbook.
 
 ### Database Initialization
 
