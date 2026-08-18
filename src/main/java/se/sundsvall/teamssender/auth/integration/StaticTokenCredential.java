@@ -4,6 +4,7 @@ import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.credential.TokenRequestContext;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import reactor.core.publisher.Mono;
 
 public class StaticTokenCredential implements TokenCredential {
@@ -16,6 +17,6 @@ public class StaticTokenCredential implements TokenCredential {
 
 	@Override
 	public Mono<AccessToken> getToken(TokenRequestContext request) {
-		return Mono.just(new AccessToken(accessToken, OffsetDateTime.now().plusHours(1)));
+		return Mono.just(new AccessToken(accessToken, OffsetDateTime.now(ZoneId.systemDefault()).plusHours(1)));
 	}
 }
